@@ -1,0 +1,114 @@
+{
+  "app": {
+    "title": "3000Words",
+    "subtitle": "Beherrsche diese, verstehe 95% des Englischen"
+  },
+  "nav": {
+    "learn": "Lernen",
+    "stats": "Statistik",
+    "settings": "Einstellungen"
+  },
+  "learn": {
+    "title": "Lernen starten",
+    "progress": "Fortschritt",
+    "noWords": "Tagesziel erreicht",
+    "noWordsDesc": "Komm morgen für neue Wörter zurück",
+    "noReview": "Keine Wörter zu wiederholen",
+    "noReviewDesc": "Lerne neue Wörter",
+    "complete": "Lernen abgeschlossen!",
+    "completeDesc": "Du hast {{count}} Wörter gelernt",
+    "continue": "Weiter lernen",
+    "toStats": "Statistik ansehen",
+    "newWords": "Neue Wörter",
+    "review": "Wiederholen",
+    "sessionStats": "Diese Sitzung",
+    "correct": "Richtig",
+    "wrong": "Falsch",
+    "accuracy": "Genauigkeit"
+  },
+  "card": {
+    "definition": "Definition",
+    "example": "Beispiel",
+    "etymology": "Etymologie",
+    "synonyms": "Synonyme",
+    "tapToReveal": "Tippen um Antwort anzuzeigen",
+    "tapToRevealDesktop": "Klicken oder Leertaste für Antwort",
+    "speakWord": "Wort aussprechen",
+    "speakExample": "Beispiel aussprechen",
+    "aiPractice": "KI-Übung"
+  },
+  "response": {
+    "forgot": "Vergessen",
+    "hard": "Schwer",
+    "good": "Gut",
+    "easy": "Leicht"
+  },
+  "stats": {
+    "title": "Statistik",
+    "vocabulary": "Wortschatz",
+    "total": "Gesamt gelernt",
+    "mastered": "Gemeistert",
+    "learning": "Am Lernen",
+    "reviewing": "Wiederholen",
+    "daily": "Heute",
+    "todayLearned": "Heute gelernt",
+    "todayReviewed": "Heute wiederholt"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "theme": "Thema",
+    "themeLight": "Hell",
+    "themeDark": "Dunkel",
+    "themeSepia": "Augenschonend",
+    "language": "Sprache",
+    "dailyGoal": "Tagesziel",
+    "dailyGoalDesc": "Anzahl neuer Wörter pro Tag",
+    "learnOrder": "Lernreihenfolge",
+    "newFirst": "Neue Wörter zuerst",
+    "reviewFirst": "Wiederholung zuerst",
+    "words": "Wörter",
+    "reset": "Daten zurücksetzen",
+    "resetDesc": "Alle Lerndaten löschen",
+    "resetConfirm": "Bist du sicher? Dies kann nicht rückgängig gemacht werden!",
+    "confirm": "Bestätigen",
+    "cancel": "Abbrechen"
+  },
+  "shortcuts": {
+    "title": "Tastenkürzel",
+    "showAnswer": "Antwort zeigen",
+    "forgot": "Vergessen",
+    "hard": "Schwer",
+    "good": "Gut",
+    "easy": "Leicht"
+  },
+  "pos": {
+    "n": "Substantiv",
+    "v": "Verb",
+    "adj": "Adjektiv",
+    "adv": "Adverb",
+    "prep": "Präposition",
+    "conj": "Konjunktion",
+    "pron": "Pronomen",
+    "interj": "Interjektion"
+  },
+  "common": {
+    "loading": "Laden..."
+  },
+  "onboarding": {
+    "getStarted": "Loslegen",
+    "next": "Weiter",
+    "selectLanguage": "Sprache wählen",
+    "selectLanguageDesc": "Wähle deine bevorzugte Sprache",
+    "setGoal": "Tagesziel festlegen",
+    "setGoalDesc": "Wie viele neue Wörter pro Tag?",
+    "startLearning": "Lernen starten",
+    "feature1Title": "Wissenschaftlicher Lernalgorithmus",
+    "feature1Desc": "SM-2 Wiederholung für effizientes Lernen",
+    "feature2Title": "3000 Kernwörter",
+    "feature2Desc": "Deckt 95% des täglichen Englisch ab",
+    "paceRelaxed": "Entspannt",
+    "paceModerate": "Moderat",
+    "paceIntensive": "Intensiv",
+    "paceChallenge": "Herausforderung"
+  }
+}

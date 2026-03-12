@@ -1,0 +1,114 @@
+{
+  "app": {
+    "title": "3000Words",
+    "subtitle": "掌握这些，读懂95%的英语"
+  },
+  "nav": {
+    "learn": "学习",
+    "stats": "统计",
+    "settings": "设置"
+  },
+  "learn": {
+    "title": "开始学习",
+    "progress": "学习进度",
+    "noWords": "今日任务已完成",
+    "noWordsDesc": "明天再来学习新单词吧",
+    "noReview": "暂无待复习单词",
+    "noReviewDesc": "去学习新单词吧",
+    "complete": "学习完成！",
+    "completeDesc": "你学习了 {{count}} 个单词",
+    "continue": "继续学习",
+    "toStats": "查看统计",
+    "newWords": "新词学习",
+    "review": "复习",
+    "sessionStats": "本次学习",
+    "correct": "正确",
+    "wrong": "错误",
+    "accuracy": "正确率"
+  },
+  "card": {
+    "definition": "释义",
+    "example": "例句",
+    "etymology": "词源",
+    "synonyms": "近义词",
+    "tapToReveal": "点击查看答案",
+    "tapToRevealDesktop": "点击卡片查看答案，或按空格键",
+    "speakWord": "朗读单词",
+    "speakExample": "朗读例句",
+    "aiPractice": "AI 造句练习"
+  },
+  "response": {
+    "forgot": "不认识",
+    "hard": "模糊",
+    "good": "认识",
+    "easy": "简单"
+  },
+  "stats": {
+    "title": "学习统计",
+    "vocabulary": "词汇统计",
+    "total": "已学单词",
+    "mastered": "已掌握",
+    "learning": "学习中",
+    "reviewing": "复习中",
+    "daily": "今日数据",
+    "todayLearned": "今日新学",
+    "todayReviewed": "今日复习"
+  },
+  "settings": {
+    "title": "设置",
+    "theme": "主题",
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "themeSepia": "护眼",
+    "language": "语言",
+    "dailyGoal": "每日目标",
+    "dailyGoalDesc": "每天学习的新单词数量",
+    "learnOrder": "学习顺序",
+    "newFirst": "先学新词",
+    "reviewFirst": "先复习",
+    "words": "个单词",
+    "reset": "重置数据",
+    "resetDesc": "清除所有学习数据",
+    "resetConfirm": "确定要清除吗？此操作无法撤销！",
+    "confirm": "确认",
+    "cancel": "取消"
+  },
+  "shortcuts": {
+    "title": "快捷键",
+    "showAnswer": "显示答案",
+    "forgot": "不认识",
+    "hard": "模糊",
+    "good": "认识",
+    "easy": "简单"
+  },
+  "pos": {
+    "n": "名词",
+    "v": "动词",
+    "adj": "形容词",
+    "adv": "副词",
+    "prep": "介词",
+    "conj": "连词",
+    "pron": "代词",
+    "interj": "感叹词"
+  },
+  "common": {
+    "loading": "加载中..."
+  },
+  "onboarding": {
+    "getStarted": "开始使用",
+    "next": "下一步",
+    "selectLanguage": "选择语言",
+    "selectLanguageDesc": "选择你喜欢的界面语言",
+    "setGoal": "设定每日目标",
+    "setGoalDesc": "每天学习多少个新单词？",
+    "startLearning": "开始学习",
+    "feature1Title": "科学记忆算法",
+    "feature1Desc": "SM-2 间隔重复，高效记忆",
+    "feature2Title": "3000 核心词汇",
+    "feature2Desc": "覆盖日常英语 95% 的使用场景",
+    "paceRelaxed": "轻松",
+    "paceModerate": "适中",
+    "paceIntensive": "强化",
+    "paceChallenge": "挑战"
+  }
+}

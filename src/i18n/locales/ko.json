@@ -1,0 +1,114 @@
+{
+  "app": {
+    "title": "3000Words",
+    "subtitle": "이것만 익히면 영어의 95%를 이해할 수 있다"
+  },
+  "nav": {
+    "learn": "학습",
+    "stats": "통계",
+    "settings": "설정"
+  },
+  "learn": {
+    "title": "학습 시작",
+    "progress": "진행률",
+    "noWords": "오늘 목표 완료",
+    "noWordsDesc": "내일 새로운 단어를 배워보세요",
+    "noReview": "복습할 단어가 없습니다",
+    "noReviewDesc": "새로운 단어를 배워보세요",
+    "complete": "학습 완료!",
+    "completeDesc": "{{count}}개의 단어를 배웠습니다",
+    "continue": "계속 학습하기",
+    "toStats": "통계 보기",
+    "newWords": "새 단어",
+    "review": "복습",
+    "sessionStats": "이번 세션",
+    "correct": "정답",
+    "wrong": "오답",
+    "accuracy": "정확도"
+  },
+  "card": {
+    "definition": "정의",
+    "example": "예문",
+    "etymology": "어원",
+    "synonyms": "동의어",
+    "tapToReveal": "탭하여 정답 보기",
+    "tapToRevealDesktop": "클릭하거나 스페이스바를 눌러 정답 보기",
+    "speakWord": "단어 발음",
+    "speakExample": "예문 발음",
+    "aiPractice": "AI 연습"
+  },
+  "response": {
+    "forgot": "잊었음",
+    "hard": "어려움",
+    "good": "좋음",
+    "easy": "쉬움"
+  },
+  "stats": {
+    "title": "통계",
+    "vocabulary": "어휘",
+    "total": "총 학습",
+    "mastered": "완전 습득",
+    "learning": "학습 중",
+    "reviewing": "복습 중",
+    "daily": "오늘",
+    "todayLearned": "오늘 학습",
+    "todayReviewed": "오늘 복습"
+  },
+  "settings": {
+    "title": "설정",
+    "theme": "테마",
+    "themeLight": "라이트",
+    "themeDark": "다크",
+    "themeSepia": "눈 보호",
+    "language": "언어",
+    "dailyGoal": "일일 목표",
+    "dailyGoalDesc": "하루 새 단어 수",
+    "learnOrder": "학습 순서",
+    "newFirst": "새 단어 먼저",
+    "reviewFirst": "복습 먼저",
+    "words": "단어",
+    "reset": "데이터 초기화",
+    "resetDesc": "모든 학습 데이터 삭제",
+    "resetConfirm": "정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다!",
+    "confirm": "확인",
+    "cancel": "취소"
+  },
+  "shortcuts": {
+    "title": "단축키",
+    "showAnswer": "정답 보기",
+    "forgot": "잊었음",
+    "hard": "어려움",
+    "good": "좋음",
+    "easy": "쉬움"
+  },
+  "pos": {
+    "n": "명사",
+    "v": "동사",
+    "adj": "형용사",
+    "adv": "부사",
+    "prep": "전치사",
+    "conj": "접속사",
+    "pron": "대명사",
+    "interj": "감탄사"
+  },
+  "common": {
+    "loading": "로딩 중..."
+  },
+  "onboarding": {
+    "getStarted": "시작하기",
+    "next": "다음",
+    "selectLanguage": "언어 선택",
+    "selectLanguageDesc": "원하는 인터페이스 언어를 선택하세요",
+    "setGoal": "일일 목표 설정",
+    "setGoalDesc": "하루에 몇 개의 새 단어를 학습할까요?",
+    "startLearning": "학습 시작",
+    "feature1Title": "과학적 암기 알고리즘",
+    "feature1Desc": "SM-2 간격 반복으로 효율적인 학습",
+    "feature2Title": "3000 핵심 단어",
+    "feature2Desc": "일상 영어의 95%를 커버",
+    "paceRelaxed": "여유롭게",
+    "paceModerate": "적당히",
+    "paceIntensive": "집중적",
+    "paceChallenge": "도전"
+  }
+}

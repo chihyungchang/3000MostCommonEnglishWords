@@ -1,0 +1,114 @@
+{
+  "app": {
+    "title": "3000Words",
+    "subtitle": "これをマスターすれば、英語の95%が読める"
+  },
+  "nav": {
+    "learn": "学習",
+    "stats": "統計",
+    "settings": "設定"
+  },
+  "learn": {
+    "title": "学習開始",
+    "progress": "進捗",
+    "noWords": "今日の目標達成",
+    "noWordsDesc": "明日また新しい単語を学びましょう",
+    "noReview": "復習する単語がありません",
+    "noReviewDesc": "新しい単語を学びましょう",
+    "complete": "学習完了！",
+    "completeDesc": "{{count}}単語を学びました",
+    "continue": "学習を続ける",
+    "toStats": "統計を見る",
+    "newWords": "新しい単語",
+    "review": "復習",
+    "sessionStats": "今回のセッション",
+    "correct": "正解",
+    "wrong": "不正解",
+    "accuracy": "正答率"
+  },
+  "card": {
+    "definition": "定義",
+    "example": "例文",
+    "etymology": "語源",
+    "synonyms": "類義語",
+    "tapToReveal": "タップして答えを表示",
+    "tapToRevealDesktop": "クリックまたはスペースキーで答えを表示",
+    "speakWord": "単語を発音",
+    "speakExample": "例文を発音",
+    "aiPractice": "AI練習"
+  },
+  "response": {
+    "forgot": "忘れた",
+    "hard": "難しい",
+    "good": "良い",
+    "easy": "簡単"
+  },
+  "stats": {
+    "title": "統計",
+    "vocabulary": "語彙",
+    "total": "学習済み",
+    "mastered": "習得済み",
+    "learning": "学習中",
+    "reviewing": "復習中",
+    "daily": "今日",
+    "todayLearned": "今日学んだ",
+    "todayReviewed": "今日復習した"
+  },
+  "settings": {
+    "title": "設定",
+    "theme": "テーマ",
+    "themeLight": "ライト",
+    "themeDark": "ダーク",
+    "themeSepia": "目に優しい",
+    "language": "言語",
+    "dailyGoal": "1日の目標",
+    "dailyGoalDesc": "1日に学ぶ新しい単語の数",
+    "learnOrder": "学習順序",
+    "newFirst": "新しい単語を先に",
+    "reviewFirst": "復習を先に",
+    "words": "単語",
+    "reset": "データをリセット",
+    "resetDesc": "すべての学習データを消去",
+    "resetConfirm": "本当に消去しますか？この操作は取り消せません！",
+    "confirm": "確認",
+    "cancel": "キャンセル"
+  },
+  "shortcuts": {
+    "title": "ショートカット",
+    "showAnswer": "答えを表示",
+    "forgot": "忘れた",
+    "hard": "難しい",
+    "good": "良い",
+    "easy": "簡単"
+  },
+  "pos": {
+    "n": "名詞",
+    "v": "動詞",
+    "adj": "形容詞",
+    "adv": "副詞",
+    "prep": "前置詞",
+    "conj": "接続詞",
+    "pron": "代名詞",
+    "interj": "感嘆詞"
+  },
+  "common": {
+    "loading": "読み込み中..."
+  },
+  "onboarding": {
+    "getStarted": "始める",
+    "next": "次へ",
+    "selectLanguage": "言語を選択",
+    "selectLanguageDesc": "お好みの表示言語を選んでください",
+    "setGoal": "1日の目標を設定",
+    "setGoalDesc": "1日に何単語学びますか？",
+    "startLearning": "学習を開始",
+    "feature1Title": "科学的記憶アルゴリズム",
+    "feature1Desc": "SM-2間隔反復で効率的に記憶",
+    "feature2Title": "3000の基礎単語",
+    "feature2Desc": "日常英語の95%をカバー",
+    "paceRelaxed": "ゆっくり",
+    "paceModerate": "普通",
+    "paceIntensive": "集中",
+    "paceChallenge": "挑戦"
+  }
+}

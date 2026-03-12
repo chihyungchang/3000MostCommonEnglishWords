@@ -1,0 +1,114 @@
+{
+  "app": {
+    "title": "3000Words",
+    "subtitle": "Освой их — пойми 95% английского"
+  },
+  "nav": {
+    "learn": "Учить",
+    "stats": "Статистика",
+    "settings": "Настройки"
+  },
+  "learn": {
+    "title": "Начать обучение",
+    "progress": "Прогресс",
+    "noWords": "Дневная цель достигнута",
+    "noWordsDesc": "Возвращайтесь завтра за новыми словами",
+    "noReview": "Нет слов для повторения",
+    "noReviewDesc": "Изучите новые слова",
+    "complete": "Обучение завершено!",
+    "completeDesc": "Вы выучили {{count}} слов",
+    "continue": "Продолжить обучение",
+    "toStats": "Смотреть статистику",
+    "newWords": "Новые слова",
+    "review": "Повторение",
+    "sessionStats": "Эта сессия",
+    "correct": "Правильно",
+    "wrong": "Неправильно",
+    "accuracy": "Точность"
+  },
+  "card": {
+    "definition": "Определение",
+    "example": "Пример",
+    "etymology": "Этимология",
+    "synonyms": "Синонимы",
+    "tapToReveal": "Нажмите, чтобы показать ответ",
+    "tapToRevealDesktop": "Кликните или нажмите Пробел",
+    "speakWord": "Произнести слово",
+    "speakExample": "Произнести пример",
+    "aiPractice": "Практика с ИИ"
+  },
+  "response": {
+    "forgot": "Забыл",
+    "hard": "Сложно",
+    "good": "Хорошо",
+    "easy": "Легко"
+  },
+  "stats": {
+    "title": "Статистика",
+    "vocabulary": "Словарь",
+    "total": "Всего изучено",
+    "mastered": "Освоено",
+    "learning": "Изучаю",
+    "reviewing": "Повторяю",
+    "daily": "Сегодня",
+    "todayLearned": "Изучено сегодня",
+    "todayReviewed": "Повторено сегодня"
+  },
+  "settings": {
+    "title": "Настройки",
+    "theme": "Тема",
+    "themeLight": "Светлая",
+    "themeDark": "Тёмная",
+    "themeSepia": "Для глаз",
+    "language": "Язык",
+    "dailyGoal": "Дневная цель",
+    "dailyGoalDesc": "Количество новых слов в день",
+    "learnOrder": "Порядок обучения",
+    "newFirst": "Сначала новые слова",
+    "reviewFirst": "Сначала повторение",
+    "words": "слов",
+    "reset": "Сбросить данные",
+    "resetDesc": "Удалить все данные обучения",
+    "resetConfirm": "Вы уверены? Это нельзя отменить!",
+    "confirm": "Подтвердить",
+    "cancel": "Отмена"
+  },
+  "shortcuts": {
+    "title": "Горячие клавиши",
+    "showAnswer": "Показать ответ",
+    "forgot": "Забыл",
+    "hard": "Сложно",
+    "good": "Хорошо",
+    "easy": "Легко"
+  },
+  "pos": {
+    "n": "существительное",
+    "v": "глагол",
+    "adj": "прилагательное",
+    "adv": "наречие",
+    "prep": "предлог",
+    "conj": "союз",
+    "pron": "местоимение",
+    "interj": "междометие"
+  },
+  "common": {
+    "loading": "Загрузка..."
+  },
+  "onboarding": {
+    "getStarted": "Начать",
+    "next": "Далее",
+    "selectLanguage": "Выбрать язык",
+    "selectLanguageDesc": "Выберите предпочтительный язык",
+    "setGoal": "Установить дневную цель",
+    "setGoalDesc": "Сколько новых слов в день?",
+    "startLearning": "Начать обучение",
+    "feature1Title": "Научный алгоритм запоминания",
+    "feature1Desc": "SM-2 интервальное повторение для эффективного обучения",
+    "feature2Title": "3000 базовых слов",
+    "feature2Desc": "Охватывает 95% повседневного английского",
+    "paceRelaxed": "Спокойный",
+    "paceModerate": "Умеренный",
+    "paceIntensive": "Интенсивный",
+    "paceChallenge": "Вызов"
+  }
+}

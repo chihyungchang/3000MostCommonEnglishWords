@@ -1,0 +1,114 @@
+{
+  "app": {
+    "title": "3000Words",
+    "subtitle": "Master these, understand 95% of English"
+  },
+  "nav": {
+    "learn": "Learn",
+    "stats": "Stats",
+    "settings": "Settings"
+  },
+  "learn": {
+    "title": "Start Learning",
+    "progress": "Progress",
+    "noWords": "Daily goal completed",
+    "noWordsDesc": "Come back tomorrow for new words",
+    "noReview": "No words to review",
+    "noReviewDesc": "Go learn some new words",
+    "complete": "Learning Complete!",
+    "completeDesc": "You learned {{count}} words",
+    "continue": "Continue Learning",
+    "toStats": "View Stats",
+    "newWords": "New Words",
+    "review": "Review",
+    "sessionStats": "This Session",
+    "correct": "Correct",
+    "wrong": "Wrong",
+    "accuracy": "Accuracy"
+  },
+  "card": {
+    "definition": "Definition",
+    "example": "Example",
+    "etymology": "Etymology",
+    "synonyms": "Synonyms",
+    "tapToReveal": "Tap to reveal answer",
+    "tapToRevealDesktop": "Click card to reveal answer, or press Space",
+    "speakWord": "Speak word",
+    "speakExample": "Speak example",
+    "aiPractice": "AI Practice"
+  },
+  "response": {
+    "forgot": "Forgot",
+    "hard": "Hard",
+    "good": "Good",
+    "easy": "Easy"
+  },
+  "stats": {
+    "title": "Statistics",
+    "vocabulary": "Vocabulary",
+    "total": "Total Learned",
+    "mastered": "Mastered",
+    "learning": "Learning",
+    "reviewing": "Reviewing",
+    "daily": "Today",
+    "todayLearned": "Learned Today",
+    "todayReviewed": "Reviewed Today"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSepia": "Eye Care",
+    "language": "Language",
+    "dailyGoal": "Daily Goal",
+    "dailyGoalDesc": "Number of new words per day",
+    "learnOrder": "Learning Order",
+    "newFirst": "New words first",
+    "reviewFirst": "Review first",
+    "words": "words",
+    "reset": "Reset Data",
+    "resetDesc": "Clear all learning data",
+    "resetConfirm": "Are you sure? This cannot be undone!",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "shortcuts": {
+    "title": "Shortcuts",
+    "showAnswer": "Show answer",
+    "forgot": "Forgot",
+    "hard": "Hard",
+    "good": "Good",
+    "easy": "Easy"
+  },
+  "pos": {
+    "n": "noun",
+    "v": "verb",
+    "adj": "adjective",
+    "adv": "adverb",
+    "prep": "preposition",
+    "conj": "conjunction",
+    "pron": "pronoun",
+    "interj": "interjection"
+  },
+  "common": {
+    "loading": "Loading..."
+  },
+  "onboarding": {
+    "getStarted": "Get Started",
+    "next": "Next",
+    "selectLanguage": "Select Language",
+    "selectLanguageDesc": "Choose your preferred interface language",
+    "setGoal": "Set Daily Goal",
+    "setGoalDesc": "How many new words per day?",
+    "startLearning": "Start Learning",
+    "feature1Title": "Scientific Memory Algorithm",
+    "feature1Desc": "SM-2 spaced repetition for efficient learning",
+    "feature2Title": "3000 Core Words",
+    "feature2Desc": "Covers 95% of everyday English usage",
+    "paceRelaxed": "Relaxed",
+    "paceModerate": "Moderate",
+    "paceIntensive": "Intensive",
+    "paceChallenge": "Challenge"
+  }
+}

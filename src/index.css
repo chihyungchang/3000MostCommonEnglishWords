@@ -1,0 +1,544 @@
+/* Google Fonts - Playful Creative for Claymorphism */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+@layer base {
+  /* ========================================
+     Claymorphism Theme - Soft 3D, Playful
+     ======================================== */
+
+  :root,
+  .light {
+    /* Background Colors */
+    --bg-primary: #FDF6F0;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #FEF3EC;
+    --bg-accent: #F0FDFA;
+
+    /* Text Colors */
+    --text-primary: #2D3748;
+    --text-secondary: #4A5568;
+    --text-tertiary: #718096;
+
+    /* Border Colors */
+    --border-color: #E8DDD5;
+    --border-strong: #D4C5B9;
+
+    /* Accent Colors - Claymorphism Pastels */
+    --accent-mint: #98FF98;
+    --accent-peach: #FDBCB4;
+    --accent-blue: #ADD8E6;
+    --accent-lilac: #E6E6FA;
+    --accent-yellow: #FFF3B0;
+
+    /* Primary Accent */
+    --accent: #0D9488;
+    --accent-hover: #0F766E;
+    --accent-light: #CCFBF1;
+
+    /* Status Colors */
+    --success: #22C55E;
+    --success-light: #DCFCE7;
+    --warning: #F59E0B;
+    --warning-light: #FEF3C7;
+    --error: #EF4444;
+    --error-light: #FEE2E2;
+    --info: #3B82F6;
+    --info-light: #DBEAFE;
+
+    /* Claymorphism Shadows */
+    --shadow-clay: 6px 6px 0px rgba(0,0,0,0.08),
+                   -2px -2px 8px rgba(255,255,255,0.9),
+                   inset 0 0 0 rgba(255,255,255,0);
+    --shadow-clay-hover: 4px 4px 0px rgba(0,0,0,0.12),
+                         -1px -1px 6px rgba(255,255,255,0.9);
+    --shadow-clay-active: 2px 2px 0px rgba(0,0,0,0.1),
+                          inset 2px 2px 4px rgba(0,0,0,0.05);
+    --shadow-clay-card: 8px 8px 0px rgba(0,0,0,0.06),
+                        -3px -3px 10px rgba(255,255,255,0.95);
+    --shadow-clay-float: 12px 12px 0px rgba(0,0,0,0.08),
+                         -4px -4px 12px rgba(255,255,255,0.95);
+  }
+
+  html.dark,
+  .dark {
+    /* Background Colors */
+    --bg-primary: #1A1D29;
+    --bg-secondary: #252836;
+    --bg-tertiary: #2D3143;
+    --bg-accent: #1F3A3A;
+
+    /* Text Colors */
+    --text-primary: #F9FAFB;
+    --text-secondary: #E2E8F0;
+    --text-tertiary: #A0AEC0;
+
+    /* Border Colors */
+    --border-color: #3D4155;
+    --border-strong: #4A5067;
+
+    /* Accent Colors - Darker Pastels */
+    --accent-mint: #6EE7B7;
+    --accent-peach: #FDA4AF;
+    --accent-blue: #93C5FD;
+    --accent-lilac: #C4B5FD;
+    --accent-yellow: #FDE68A;
+
+    /* Primary Accent */
+    --accent: #2DD4BF;
+    --accent-hover: #5EEAD4;
+    --accent-light: #134E4A;
+
+    /* Status Colors */
+    --success: #4ADE80;
+    --success-light: #14532D;
+    --warning: #FBBF24;
+    --warning-light: #713F12;
+    --error: #F87171;
+    --error-light: #7F1D1D;
+    --info: #60A5FA;
+    --info-light: #1E3A8A;
+
+    /* Dark Claymorphism Shadows */
+    --shadow-clay: 6px 6px 0px rgba(0,0,0,0.3),
+                   -2px -2px 8px rgba(255,255,255,0.03);
+    --shadow-clay-hover: 4px 4px 0px rgba(0,0,0,0.35),
+                         -1px -1px 6px rgba(255,255,255,0.03);
+    --shadow-clay-active: 2px 2px 0px rgba(0,0,0,0.25),
+                          inset 2px 2px 4px rgba(0,0,0,0.2);
+    --shadow-clay-card: 8px 8px 0px rgba(0,0,0,0.35),
+                        -3px -3px 10px rgba(255,255,255,0.02);
+    --shadow-clay-float: 12px 12px 0px rgba(0,0,0,0.4),
+                         -4px -4px 12px rgba(255,255,255,0.02);
+  }
+
+  /* Eye Care Mode - Warm Green */
+  html.eyecare,
+  .eyecare {
+    --bg-primary: #F0F7F0;
+    --bg-secondary: #FAFDF9;
+    --bg-tertiary: #E8F5E8;
+    --bg-accent: #E0F2E0;
+
+    --text-primary: #1B5E20;
+    --text-secondary: #2E7D32;
+    --text-tertiary: #558B2F;
+
+    --border-color: #C8E6C9;
+    --border-strong: #A5D6A7;
+
+    --accent-mint: #81C784;
+    --accent-peach: #FFCC80;
+    --accent-blue: #90CAF9;
+    --accent-lilac: #CE93D8;
+    --accent-yellow: #FFF59D;
+
+    --accent: #43A047;
+    --accent-hover: #388E3C;
+    --accent-light: #C8E6C9;
+
+    --success: #66BB6A;
+    --success-light: #E8F5E9;
+    --warning: #FFB74D;
+    --warning-light: #FFF8E1;
+    --error: #E57373;
+    --error-light: #FFEBEE;
+    --info: #64B5F6;
+    --info-light: #E3F2FD;
+
+    --shadow-clay: 6px 6px 0px rgba(27,94,32,0.08),
+                   -2px -2px 8px rgba(255,255,255,0.9);
+    --shadow-clay-hover: 4px 4px 0px rgba(27,94,32,0.12),
+                         -1px -1px 6px rgba(255,255,255,0.9);
+    --shadow-clay-active: 2px 2px 0px rgba(27,94,32,0.1),
+                          inset 2px 2px 4px rgba(27,94,32,0.05);
+    --shadow-clay-card: 8px 8px 0px rgba(27,94,32,0.06),
+                        -3px -3px 10px rgba(255,255,255,0.95);
+    --shadow-clay-float: 12px 12px 0px rgba(27,94,32,0.08),
+                         -4px -4px 12px rgba(255,255,255,0.95);
+  }
+}
+
+/* ========================================
+   Base Styles
+   ======================================== */
+
+html {
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+}
+
+/* Safe area for mobile */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ========================================
+   Theme-aware Utility Classes
+   ======================================== */
+
+.bg-theme-primary {
+  background-color: var(--bg-primary);
+}
+
+.bg-theme-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.bg-theme-tertiary {
+  background-color: var(--bg-tertiary);
+}
+
+.text-theme-primary {
+  color: var(--text-primary);
+}
+
+.text-theme-secondary {
+  color: var(--text-secondary);
+}
+
+.text-theme-tertiary {
+  color: var(--text-tertiary);
+}
+
+.border-theme {
+  border-color: var(--border-color);
+}
+
+.border-theme-strong {
+  border-color: var(--border-strong);
+}
+
+.accent-color {
+  color: var(--accent);
+}
+
+.bg-accent {
+  background-color: var(--accent);
+}
+
+.bg-accent:hover {
+  background-color: var(--accent-hover);
+}
+
+.bg-accent-light {
+  background-color: var(--accent-light);
+}
+
+/* ========================================
+   Claymorphism Components
+   ======================================== */
+
+/* Card Style */
+.clay-card {
+  background-color: var(--bg-secondary);
+  border: 3px solid var(--border-color);
+  border-radius: 20px;
+  box-shadow: var(--shadow-clay-card);
+  transition: all 0.2s ease-out;
+}
+
+.clay-card:hover {
+  box-shadow: var(--shadow-clay-float);
+  transform: translateY(-2px);
+}
+
+/* Button Style */
+.clay-btn {
+  background-color: var(--bg-secondary);
+  border: 3px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: var(--shadow-clay);
+  transition: all 0.15s ease-out;
+  cursor: pointer;
+}
+
+.clay-btn:hover {
+  box-shadow: var(--shadow-clay-hover);
+  transform: translateY(-1px);
+}
+
+.clay-btn:active {
+  box-shadow: var(--shadow-clay-active);
+  transform: translateY(1px);
+}
+
+/* Primary Button */
+.clay-btn-primary {
+  background-color: var(--accent);
+  border-color: var(--accent-hover);
+  color: white;
+}
+
+.clay-btn-primary:hover {
+  background-color: var(--accent-hover);
+}
+
+/* Success Button */
+.clay-btn-success {
+  background-color: var(--success);
+  border-color: #16A34A;
+  color: white;
+}
+
+/* Warning Button */
+.clay-btn-warning {
+  background-color: var(--warning);
+  border-color: #D97706;
+  color: white;
+}
+
+/* Error Button */
+.clay-btn-error {
+  background-color: var(--error);
+  border-color: #DC2626;
+  color: white;
+}
+
+/* Info Button */
+.clay-btn-info {
+  background-color: var(--info);
+  border-color: #2563EB;
+  color: white;
+}
+
+/* Accent Colored Cards */
+.clay-card-mint {
+  background-color: var(--accent-mint);
+  border-color: #6EE7B7;
+}
+
+.clay-card-peach {
+  background-color: var(--accent-peach);
+  border-color: #FCA5A5;
+}
+
+.clay-card-blue {
+  background-color: var(--accent-blue);
+  border-color: #93C5FD;
+}
+
+.clay-card-lilac {
+  background-color: var(--accent-lilac);
+  border-color: #C4B5FD;
+}
+
+.clay-card-yellow {
+  background-color: var(--accent-yellow);
+  border-color: #FDE047;
+}
+
+/* Input Style */
+.clay-input {
+  background-color: var(--bg-secondary);
+  border: 3px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: inset 2px 2px 4px rgba(0,0,0,0.05);
+  transition: all 0.2s ease-out;
+}
+
+.clay-input:focus {
+  border-color: var(--accent);
+  box-shadow: inset 2px 2px 4px rgba(0,0,0,0.05),
+              0 0 0 3px var(--accent-light);
+  outline: none;
+}
+
+/* Badge/Chip Style */
+.clay-badge {
+  background-color: var(--bg-tertiary);
+  border: 2px solid var(--border-color);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+/* Progress Bar Style */
+.clay-progress {
+  background-color: var(--bg-tertiary);
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: inset 1px 1px 3px rgba(0,0,0,0.08);
+  position: relative;
+}
+
+.clay-progress-bar {
+  border-radius: 999px;
+  transition: width 0.5s ease-out;
+  background-image: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.15) 0%,
+    rgba(255,255,255,0.3) 50%,
+    rgba(255,255,255,0.15) 100%
+  );
+  background-size: 200% 100%;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Navigation Item */
+.clay-nav-item {
+  border-radius: 14px;
+  transition: all 0.15s ease-out;
+  cursor: pointer;
+}
+
+.clay-nav-item:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.clay-nav-item.active {
+  color: var(--accent);
+  border: 2px solid var(--accent);
+  box-shadow: var(--shadow-clay);
+}
+
+/* Floating Container */
+.clay-float {
+  background-color: var(--bg-secondary);
+  border: 3px solid var(--border-color);
+  border-radius: 24px;
+  box-shadow: var(--shadow-clay-float);
+}
+
+/* ========================================
+   Status Colors
+   ======================================== */
+
+.bg-success {
+  background-color: var(--success);
+}
+
+.bg-success-light {
+  background-color: var(--success-light);
+}
+
+.text-success {
+  color: var(--success);
+}
+
+.bg-warning {
+  background-color: var(--warning);
+}
+
+.bg-warning-light {
+  background-color: var(--warning-light);
+}
+
+.text-warning {
+  color: var(--warning);
+}
+
+.bg-error {
+  background-color: var(--error);
+}
+
+.bg-error-light {
+  background-color: var(--error-light);
+}
+
+.text-error {
+  color: var(--error);
+}
+
+.bg-info {
+  background-color: var(--info);
+}
+
+.bg-info-light {
+  background-color: var(--info-light);
+}
+
+.text-info {
+  color: var(--info);
+}
+
+/* ========================================
+   Animation Classes
+   ======================================== */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes bounce-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+.animate-bounce-soft {
+  animation: bounce-soft 1s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-pulse-soft,
+  .animate-bounce-soft {
+    animation: none;
+  }
+
+  .clay-card,
+  .clay-btn,
+  .clay-nav-item {
+    transition: none;
+  }
+}
+
+/* ========================================
+   Scrollbar Styling
+   ======================================== */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 10px;
+  border: 2px solid var(--bg-tertiary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}

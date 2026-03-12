@@ -1,0 +1,114 @@
+{
+  "app": {
+    "title": "3000Words",
+    "subtitle": "Domina estas, comprende el 95% del inglés"
+  },
+  "nav": {
+    "learn": "Aprender",
+    "stats": "Estadísticas",
+    "settings": "Ajustes"
+  },
+  "learn": {
+    "title": "Comenzar a Aprender",
+    "progress": "Progreso",
+    "noWords": "Meta diaria completada",
+    "noWordsDesc": "Vuelve mañana para nuevas palabras",
+    "noReview": "No hay palabras para repasar",
+    "noReviewDesc": "Ve a aprender palabras nuevas",
+    "complete": "¡Aprendizaje Completado!",
+    "completeDesc": "Aprendiste {{count}} palabras",
+    "continue": "Continuar Aprendiendo",
+    "toStats": "Ver Estadísticas",
+    "newWords": "Palabras Nuevas",
+    "review": "Repaso",
+    "sessionStats": "Esta Sesión",
+    "correct": "Correcto",
+    "wrong": "Incorrecto",
+    "accuracy": "Precisión"
+  },
+  "card": {
+    "definition": "Definición",
+    "example": "Ejemplo",
+    "etymology": "Etimología",
+    "synonyms": "Sinónimos",
+    "tapToReveal": "Toca para revelar la respuesta",
+    "tapToRevealDesktop": "Clic o Espacio para revelar",
+    "speakWord": "Pronunciar palabra",
+    "speakExample": "Pronunciar ejemplo",
+    "aiPractice": "Práctica con IA"
+  },
+  "response": {
+    "forgot": "Olvidé",
+    "hard": "Difícil",
+    "good": "Bien",
+    "easy": "Fácil"
+  },
+  "stats": {
+    "title": "Estadísticas",
+    "vocabulary": "Vocabulario",
+    "total": "Total Aprendido",
+    "mastered": "Dominado",
+    "learning": "Aprendiendo",
+    "reviewing": "Repasando",
+    "daily": "Hoy",
+    "todayLearned": "Aprendido Hoy",
+    "todayReviewed": "Repasado Hoy"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "theme": "Tema",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "themeSepia": "Cuidado Visual",
+    "language": "Idioma",
+    "dailyGoal": "Meta Diaria",
+    "dailyGoalDesc": "Número de palabras nuevas por día",
+    "learnOrder": "Orden de Aprendizaje",
+    "newFirst": "Palabras nuevas primero",
+    "reviewFirst": "Repaso primero",
+    "words": "palabras",
+    "reset": "Restablecer Datos",
+    "resetDesc": "Borrar todos los datos de aprendizaje",
+    "resetConfirm": "¿Estás seguro? ¡Esto no se puede deshacer!",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar"
+  },
+  "shortcuts": {
+    "title": "Atajos",
+    "showAnswer": "Mostrar respuesta",
+    "forgot": "Olvidé",
+    "hard": "Difícil",
+    "good": "Bien",
+    "easy": "Fácil"
+  },
+  "pos": {
+    "n": "sustantivo",
+    "v": "verbo",
+    "adj": "adjetivo",
+    "adv": "adverbio",
+    "prep": "preposición",
+    "conj": "conjunción",
+    "pron": "pronombre",
+    "interj": "interjección"
+  },
+  "common": {
+    "loading": "Cargando..."
+  },
+  "onboarding": {
+    "getStarted": "Empezar",
+    "next": "Siguiente",
+    "selectLanguage": "Seleccionar Idioma",
+    "selectLanguageDesc": "Elige tu idioma preferido",
+    "setGoal": "Establecer Meta Diaria",
+    "setGoalDesc": "¿Cuántas palabras nuevas por día?",
+    "startLearning": "Comenzar a Aprender",
+    "feature1Title": "Algoritmo de Memoria Científico",
+    "feature1Desc": "Repetición espaciada SM-2 para aprendizaje eficiente",
+    "feature2Title": "3000 Palabras Esenciales",
+    "feature2Desc": "Cubre el 95% del inglés cotidiano",
+    "paceRelaxed": "Relajado",
+    "paceModerate": "Moderado",
+    "paceIntensive": "Intensivo",
+    "paceChallenge": "Desafío"
+  }
+}
