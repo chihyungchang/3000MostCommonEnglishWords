@@ -5,6 +5,7 @@
   },
   "nav": {
     "learn": "Lernen",
+    "challenge": "Herausforderung",
     "stats": "Statistik",
     "settings": "Einstellungen"
   },
@@ -93,6 +94,36 @@
   },
   "common": {
     "loading": "Laden..."
+  },
+  "challenge": {
+    "title": "Herausforderungsmodus",
+    "combo": "KOMBO",
+    "words": "Wörter",
+    "translations": "Übersetzungen",
+    "start": "Herausforderung starten",
+    "exit": "Beenden",
+    "highestLevel": "Höchstes Level",
+    "bestCombo": "Bestes Kombo",
+    "totalCorrect": "Gesamt richtig",
+    "gamesPlayed": "Spiele gespielt",
+    "howToPlay": "Spielanleitung",
+    "rule1": "Englische Wörter links, Übersetzungen rechts",
+    "rule2": "Tippe, um das richtige Wort und die Übersetzung zu verbinden",
+    "rule4": "3 Minuten pro Level, erreiche die erforderliche Genauigkeit",
+    "rule5": "Lv1 braucht 50%, steigert sich auf 95% bei Lv10",
+    "levelRequirements": "Level-Anforderungen",
+    "accuracy": "Genauigkeit",
+    "required": "Erforderlich",
+    "score": "Punkte",
+    "levelUp": "Level Up!",
+    "levelUpDesc": "Weiter zu Lv.{{level}}, {{accuracy}}% Genauigkeit nötig",
+    "levelFailed": "Herausforderung gescheitert",
+    "levelFailedDesc": "{{required}}% erforderlich, du hattest {{actual}}%",
+    "nextLevel": "Nächstes Level",
+    "tryAgain": "Nochmal versuchen",
+    "backToHome": "Zurück zur Startseite",
+    "gameComplete": "Herausforderung abgeschlossen!",
+    "maxLevelReached": "Glückwunsch! Alle Level geschafft!"
   },
   "onboarding": {
     "getStarted": "Loslegen",

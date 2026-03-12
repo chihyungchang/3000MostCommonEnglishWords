@@ -504,6 +504,23 @@ h1, h2, h3, h4, h5, h6 {
   animation: fade-in 0.4s ease-out;
 }
 
+/* Combo burst animation for Challenge mode */
+@keyframes combo-burst {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1.2); }
+  70% { transform: scale(0.95); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+.animate-combo-burst {
+  animation: combo-burst 1.5s ease-out forwards;
+}
+
+/* Scale hover utility */
+.hover\:scale-102:hover {
+  transform: scale(1.02);
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   .animate-float,

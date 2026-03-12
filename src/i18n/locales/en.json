@@ -5,6 +5,7 @@
   },
   "nav": {
     "learn": "Learn",
+    "challenge": "Challenge",
     "stats": "Stats",
     "settings": "Settings"
   },
@@ -93,6 +94,36 @@
   },
   "common": {
     "loading": "Loading..."
+  },
+  "challenge": {
+    "title": "Challenge Mode",
+    "combo": "COMBO",
+    "words": "Words",
+    "translations": "Translations",
+    "start": "Start Challenge",
+    "exit": "Exit",
+    "highestLevel": "Highest Level",
+    "bestCombo": "Best Combo",
+    "totalCorrect": "Total Correct",
+    "gamesPlayed": "Games Played",
+    "howToPlay": "How to Play",
+    "rule1": "English words on the left, translations on the right",
+    "rule2": "Tap to match the correct word and translation",
+    "rule4": "3 minutes per level, reach required accuracy to advance",
+    "rule5": "Lv1 needs 50% accuracy, increasing to 99% at Lv10",
+    "levelRequirements": "Level Requirements",
+    "accuracy": "Accuracy",
+    "required": "Required",
+    "score": "Score",
+    "levelUp": "Level Up!",
+    "levelUpDesc": "Advancing to Lv.{{level}}, need {{accuracy}}% accuracy",
+    "levelFailed": "Challenge Failed",
+    "levelFailedDesc": "Required {{required}}% accuracy, you got {{actual}}%",
+    "nextLevel": "Next Level",
+    "tryAgain": "Try Again",
+    "backToHome": "Back to Home",
+    "gameComplete": "Challenge Complete!",
+    "maxLevelReached": "Congratulations! You've beaten all levels!"
   },
   "onboarding": {
     "getStarted": "Get Started",

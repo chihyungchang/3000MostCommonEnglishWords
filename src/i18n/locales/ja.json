@@ -5,6 +5,7 @@
   },
   "nav": {
     "learn": "学習",
+    "challenge": "チャレンジ",
     "stats": "統計",
     "settings": "設定"
   },
@@ -93,6 +94,36 @@
   },
   "common": {
     "loading": "読み込み中..."
+  },
+  "challenge": {
+    "title": "チャレンジモード",
+    "combo": "コンボ",
+    "words": "単語",
+    "translations": "翻訳",
+    "start": "チャレンジ開始",
+    "exit": "終了",
+    "highestLevel": "最高レベル",
+    "bestCombo": "最高コンボ",
+    "totalCorrect": "累計正解",
+    "gamesPlayed": "プレイ回数",
+    "howToPlay": "遊び方",
+    "rule1": "左に英単語、右に翻訳が表示されます",
+    "rule2": "正しい単語と翻訳をタップしてマッチさせましょう",
+    "rule4": "各レベル3分、必要な正答率でレベルアップ",
+    "rule5": "Lv1は50%、Lv10は95%の正答率が必要",
+    "levelRequirements": "レベル要件",
+    "accuracy": "正答率",
+    "required": "必要",
+    "score": "スコア",
+    "levelUp": "レベルアップ！",
+    "levelUpDesc": "Lv.{{level}}に進みます、{{accuracy}}%の正答率が必要",
+    "levelFailed": "チャレンジ失敗",
+    "levelFailedDesc": "{{required}}%が必要でしたが、{{actual}}%でした",
+    "nextLevel": "次のレベル",
+    "tryAgain": "もう一度",
+    "backToHome": "ホームに戻る",
+    "gameComplete": "チャレンジ完了！",
+    "maxLevelReached": "おめでとう！全レベルクリア！"
   },
   "onboarding": {
     "getStarted": "始める",

@@ -5,6 +5,7 @@
   },
   "nav": {
     "learn": "학습",
+    "challenge": "챌린지",
     "stats": "통계",
     "settings": "설정"
   },
@@ -93,6 +94,36 @@
   },
   "common": {
     "loading": "로딩 중..."
+  },
+  "challenge": {
+    "title": "챌린지 모드",
+    "combo": "콤보",
+    "words": "단어",
+    "translations": "번역",
+    "start": "챌린지 시작",
+    "exit": "나가기",
+    "highestLevel": "최고 레벨",
+    "bestCombo": "최고 콤보",
+    "totalCorrect": "총 정답",
+    "gamesPlayed": "플레이 횟수",
+    "howToPlay": "게임 방법",
+    "rule1": "왼쪽에 영어 단어, 오른쪽에 번역이 표시됩니다",
+    "rule2": "올바른 단어와 번역을 탭하여 매칭하세요",
+    "rule4": "레벨당 3분, 필요한 정확도 달성시 레벨업",
+    "rule5": "Lv1은 50%, Lv10은 95% 정확도 필요",
+    "levelRequirements": "레벨 요구사항",
+    "accuracy": "정확도",
+    "required": "필요",
+    "score": "점수",
+    "levelUp": "레벨 업!",
+    "levelUpDesc": "Lv.{{level}}로 진행, {{accuracy}}% 정확도 필요",
+    "levelFailed": "챌린지 실패",
+    "levelFailedDesc": "{{required}}% 필요, 달성한 정확도 {{actual}}%",
+    "nextLevel": "다음 레벨",
+    "tryAgain": "다시 도전",
+    "backToHome": "홈으로",
+    "gameComplete": "챌린지 완료!",
+    "maxLevelReached": "축하합니다! 모든 레벨을 클리어했습니다!"
   },
   "onboarding": {
     "getStarted": "시작하기",

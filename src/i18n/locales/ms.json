@@ -5,6 +5,7 @@
   },
   "nav": {
     "learn": "Belajar",
+    "challenge": "Cabaran",
     "stats": "Statistik",
     "settings": "Tetapan"
   },
@@ -93,6 +94,36 @@
   },
   "common": {
     "loading": "Memuatkan..."
+  },
+  "challenge": {
+    "title": "Mod Cabaran",
+    "combo": "KOMBO",
+    "words": "Perkataan",
+    "translations": "Terjemahan",
+    "start": "Mula Cabaran",
+    "exit": "Keluar",
+    "highestLevel": "Tahap Tertinggi",
+    "bestCombo": "Kombo Terbaik",
+    "totalCorrect": "Jumlah Betul",
+    "gamesPlayed": "Permainan Dimainkan",
+    "howToPlay": "Cara Bermain",
+    "rule1": "Perkataan Inggeris di kiri, terjemahan di kanan",
+    "rule2": "Ketik untuk memadankan perkataan yang betul dengan terjemahan",
+    "rule4": "3 minit setiap tahap, capai ketepatan yang diperlukan",
+    "rule5": "Lv1 perlukan 50%, meningkat ke 95% pada Lv10",
+    "levelRequirements": "Keperluan Tahap",
+    "accuracy": "Ketepatan",
+    "required": "Diperlukan",
+    "score": "Skor",
+    "levelUp": "Naik Tahap!",
+    "levelUpDesc": "Maju ke Lv.{{level}}, perlu {{accuracy}}%",
+    "levelFailed": "Cabaran Gagal",
+    "levelFailedDesc": "Diperlukan {{required}}%, anda dapat {{actual}}%",
+    "nextLevel": "Tahap Seterusnya",
+    "tryAgain": "Cuba Lagi",
+    "backToHome": "Kembali ke Utama",
+    "gameComplete": "Cabaran Selesai!",
+    "maxLevelReached": "Tahniah! Anda telah menamatkan semua tahap!"
   },
   "onboarding": {
     "getStarted": "Mulakan",

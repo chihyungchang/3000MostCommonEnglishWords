@@ -5,6 +5,7 @@
   },
   "nav": {
     "learn": "Aprender",
+    "challenge": "Desafio",
     "stats": "Estatísticas",
     "settings": "Configurações"
   },
@@ -93,6 +94,36 @@
   },
   "common": {
     "loading": "Carregando..."
+  },
+  "challenge": {
+    "title": "Modo Desafio",
+    "combo": "COMBO",
+    "words": "Palavras",
+    "translations": "Traduções",
+    "start": "Iniciar Desafio",
+    "exit": "Sair",
+    "highestLevel": "Nível Mais Alto",
+    "bestCombo": "Melhor Combo",
+    "totalCorrect": "Total Corretas",
+    "gamesPlayed": "Jogos Jogados",
+    "howToPlay": "Como Jogar",
+    "rule1": "Palavras em inglês à esquerda, traduções à direita",
+    "rule2": "Toque para combinar a palavra correta com a tradução",
+    "rule4": "3 minutos por nível, alcance a precisão necessária",
+    "rule5": "Lv1 precisa de 50%, aumentando para 95% no Lv10",
+    "levelRequirements": "Requisitos de Nível",
+    "accuracy": "Precisão",
+    "required": "Necessário",
+    "score": "Pontos",
+    "levelUp": "Subiu de Nível!",
+    "levelUpDesc": "Avançando para Lv.{{level}}, precisa de {{accuracy}}%",
+    "levelFailed": "Desafio Falhou",
+    "levelFailedDesc": "Necessário {{required}}%, você conseguiu {{actual}}%",
+    "nextLevel": "Próximo Nível",
+    "tryAgain": "Tentar Novamente",
+    "backToHome": "Voltar ao Início",
+    "gameComplete": "Desafio Completo!",
+    "maxLevelReached": "Parabéns! Você completou todos os níveis!"
   },
   "onboarding": {
     "getStarted": "Começar",

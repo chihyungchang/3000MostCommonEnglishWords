@@ -5,6 +5,7 @@
   },
   "nav": {
     "learn": "تعلم",
+    "challenge": "تحدي",
     "stats": "إحصائيات",
     "settings": "الإعدادات"
   },
@@ -93,6 +94,36 @@
   },
   "common": {
     "loading": "جاري التحميل..."
+  },
+  "challenge": {
+    "title": "وضع التحدي",
+    "combo": "كومبو",
+    "words": "الكلمات",
+    "translations": "الترجمات",
+    "start": "ابدأ التحدي",
+    "exit": "خروج",
+    "highestLevel": "أعلى مستوى",
+    "bestCombo": "أفضل كومبو",
+    "totalCorrect": "إجمالي الصحيح",
+    "gamesPlayed": "الألعاب الملعوبة",
+    "howToPlay": "كيفية اللعب",
+    "rule1": "الكلمات الإنجليزية على اليسار، الترجمات على اليمين",
+    "rule2": "اضغط لمطابقة الكلمة الصحيحة مع الترجمة",
+    "rule4": "3 دقائق لكل مستوى، حقق الدقة المطلوبة",
+    "rule5": "المستوى 1 يحتاج 50%، يرتفع إلى 95% في المستوى 10",
+    "levelRequirements": "متطلبات المستوى",
+    "accuracy": "الدقة",
+    "required": "مطلوب",
+    "score": "النقاط",
+    "levelUp": "ترقية!",
+    "levelUpDesc": "التقدم إلى Lv.{{level}}، تحتاج {{accuracy}}%",
+    "levelFailed": "فشل التحدي",
+    "levelFailedDesc": "مطلوب {{required}}%، حصلت على {{actual}}%",
+    "nextLevel": "المستوى التالي",
+    "tryAgain": "حاول مجدداً",
+    "backToHome": "العودة للرئيسية",
+    "gameComplete": "اكتمل التحدي!",
+    "maxLevelReached": "مبروك! أكملت جميع المستويات!"
   },
   "onboarding": {
     "getStarted": "ابدأ الآن",

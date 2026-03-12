@@ -5,6 +5,7 @@
   },
   "nav": {
     "learn": "Учить",
+    "challenge": "Вызов",
     "stats": "Статистика",
     "settings": "Настройки"
   },
@@ -93,6 +94,36 @@
   },
   "common": {
     "loading": "Загрузка..."
+  },
+  "challenge": {
+    "title": "Режим вызова",
+    "combo": "КОМБО",
+    "words": "Слова",
+    "translations": "Переводы",
+    "start": "Начать испытание",
+    "exit": "Выход",
+    "highestLevel": "Макс. уровень",
+    "bestCombo": "Лучшее комбо",
+    "totalCorrect": "Всего верно",
+    "gamesPlayed": "Сыграно игр",
+    "howToPlay": "Как играть",
+    "rule1": "Английские слова слева, переводы справа",
+    "rule2": "Нажимайте, чтобы сопоставить слово с переводом",
+    "rule4": "3 минуты на уровень, достигните требуемой точности",
+    "rule5": "Lv1 требует 50%, до 95% на Lv10",
+    "levelRequirements": "Требования уровней",
+    "accuracy": "Точность",
+    "required": "Требуется",
+    "score": "Очки",
+    "levelUp": "Уровень повышен!",
+    "levelUpDesc": "Переход на Lv.{{level}}, нужно {{accuracy}}%",
+    "levelFailed": "Испытание провалено",
+    "levelFailedDesc": "Требовалось {{required}}%, получено {{actual}}%",
+    "nextLevel": "Следующий уровень",
+    "tryAgain": "Попробовать снова",
+    "backToHome": "На главную",
+    "gameComplete": "Испытание пройдено!",
+    "maxLevelReached": "Поздравляем! Все уровни пройдены!"
   },
   "onboarding": {
     "getStarted": "Начать",
