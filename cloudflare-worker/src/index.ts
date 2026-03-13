@@ -197,6 +197,8 @@ Answer in ${outputLang}:`;
       ],
       max_tokens: 256,
       temperature: 0.7,
+      // Disable thinking/reasoning mode to get direct answer
+      thinking: { type: 'disabled' },
     });
 
     // Handle OpenAI-compatible response format
@@ -207,18 +209,16 @@ Answer in ${outputLang}:`;
       const resp = aiResponse as any;
       if (resp.choices && resp.choices[0]?.message) {
         const msg = resp.choices[0].message;
-        // Try content first, then reasoning_content
+        // Get content (final answer), not reasoning_content (thinking process)
         responseText = msg.content || '';
-        if (!responseText && msg.reasoning_content) {
-          responseText = msg.reasoning_content;
-        }
       } else {
         responseText = resp.response || resp.result?.response || resp.generated_text || resp.text || '';
       }
     }
 
-    // Clean up response - remove markdown symbols
+    // Clean up response - remove markdown symbols and numbering
     responseText = responseText
+      .replace(/^\s*\d+\.\s*/gm, '')
       .replace(/^\s*[\*\-]\s*/gm, '')
       .replace(/\*\*/g, '')
       .replace(/\*/g, '')
