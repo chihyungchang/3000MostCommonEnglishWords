@@ -99,7 +99,7 @@ export function AIChatDialog({ word, isOpen, onClose, onSendMessage, isLoading }
         fixed flex flex-col z-100
         ${isMobile
           ? 'inset-0 bg-theme-primary safe-area-pt safe-area-pb'
-          : 'inset-y-4 right-4 w-96 clay-float'
+          : 'inset-y-4 right-4 w-110 clay-float'
         }
       `}>
         {/* Header */}
@@ -174,14 +174,14 @@ export function AIChatDialog({ word, isOpen, onClose, onSendMessage, isLoading }
                   )}
                 </div>
                 <div
-                  className={`clay-card p-3 max-w-[80%] ${
+                  className={`p-3 max-w-[80%] rounded-2xl border-3 ${
                     msg.role === 'user'
-                      ? 'bg-accent text-white border-accent'
-                      : 'bg-theme-tertiary'
+                      ? 'bg-accent border-accent'
+                      : 'clay-card bg-theme-tertiary'
                   }`}
                 >
                   <p className={`text-sm whitespace-pre-wrap leading-relaxed ${
-                    msg.role === 'user' ? 'text-white' : 'text-theme-primary'
+                    msg.role === 'user' ? 'text-white!' : 'text-theme-primary'
                   }`}>
                     {msg.content}
                   </p>

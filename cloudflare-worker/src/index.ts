@@ -184,10 +184,12 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
 
     const outputLang = langMap[targetLang] || '中文';
 
-    const systemPrompt = `你是一位专业的英语词汇教学助手。用${outputLang}回答用户关于英语单词的问题。
-回答要简洁实用，每次回复不超过150字。
-可以提供：词源、记忆技巧、例句、近义词反义词、常见搭配、用法注意等。
-语气友好活泼，像朋友一样帮助用户学习。`;
+    const systemPrompt = `你是英语词汇助手。用${outputLang}简洁回答，不超过80字。
+规则：
+1. 直接回答，不要分析问题
+2. 不使用*、#等markdown符号
+3. 不要列表，用短句
+4. 语气友好自然`;
 
     const userPrompt = `${context}\n\n用户问题: ${message}`;
 
