@@ -237,14 +237,14 @@ async function handleLookup(
     const outputLang = langMap[targetLang] || "中文";
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const aiResponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct" as any, {
+    const aiResponse = await env.AI.run("@cf/meta/llama-3.2-1b-instruct" as any, {
       messages: [
         {
           role: "user",
           content: `Define "${word}" in JSON: {"phonetic":"/IPA/","pos":["n"/"v"/"adj"/"adv"/"prep"],"definition":"${outputLang}释义","example":"English sentence"}`,
         },
       ],
-      max_tokens: 200,
+      max_tokens: 150,
       temperature: 0.1,
     });
 
@@ -350,12 +350,12 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
       : `English tutor. Answer in ${outputLang}. Max 30 words.`;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const aiResponse = await env.AI.run("@cf/zai-org/glm-4.7-flash" as any, {
+    const aiResponse = await env.AI.run("@cf/meta/llama-3.2-3b-instruct" as any, {
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: message },
       ],
-      max_tokens: 128,
+      max_tokens: 100,
       temperature: 0.5,
     });
 
