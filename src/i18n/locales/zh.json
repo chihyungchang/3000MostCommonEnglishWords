@@ -95,6 +95,18 @@
   "common": {
     "loading": "加载中..."
   },
+  "ai": {
+    "chatTitle": "AI 助教",
+    "learning": "正在学习",
+    "welcomeMessage": "有什么关于这个单词的问题吗？",
+    "quickQ1": "这个词怎么记？",
+    "quickQ2": "给我造个句子",
+    "quickQ3": "有哪些近义词？",
+    "quickQ4": "词根是什么？",
+    "thinking": "思考中...",
+    "inputPlaceholder": "输入你的问题...",
+    "error": "抱歉，出现了错误，请重试。"
+  },
   "challenge": {
     "title": "挑战模式",
     "combo": "连击",

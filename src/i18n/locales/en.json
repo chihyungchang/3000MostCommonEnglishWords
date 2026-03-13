@@ -95,6 +95,18 @@
   "common": {
     "loading": "Loading..."
   },
+  "ai": {
+    "chatTitle": "AI Tutor",
+    "learning": "Learning",
+    "welcomeMessage": "Any questions about this word?",
+    "quickQ1": "How to remember it?",
+    "quickQ2": "Give me a sentence",
+    "quickQ3": "What are synonyms?",
+    "quickQ4": "What's the root?",
+    "thinking": "Thinking...",
+    "inputPlaceholder": "Type your question...",
+    "error": "Sorry, an error occurred. Please try again."
+  },
   "challenge": {
     "title": "Challenge Mode",
     "combo": "COMBO",

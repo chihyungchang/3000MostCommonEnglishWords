@@ -95,6 +95,18 @@
   "common": {
     "loading": "読み込み中..."
   },
+  "ai": {
+    "chatTitle": "AIチューター",
+    "learning": "学習中",
+    "welcomeMessage": "この単語について質問はありますか？",
+    "quickQ1": "覚え方を教えて",
+    "quickQ2": "例文を作って",
+    "quickQ3": "類義語は？",
+    "quickQ4": "語源は？",
+    "thinking": "考え中...",
+    "inputPlaceholder": "質問を入力...",
+    "error": "エラーが発生しました。もう一度お試しください。"
+  },
   "challenge": {
     "title": "チャレンジモード",
     "combo": "コンボ",

@@ -95,6 +95,18 @@
   "common": {
     "loading": "Memuatkan..."
   },
+  "ai": {
+    "chatTitle": "Tutor AI",
+    "learning": "Sedang belajar",
+    "welcomeMessage": "Ada soalan tentang perkataan ini?",
+    "quickQ1": "Bagaimana nak ingat?",
+    "quickQ2": "Beri saya ayat",
+    "quickQ3": "Apakah sinonimnya?",
+    "quickQ4": "Apakah akarnya?",
+    "thinking": "Sedang berfikir...",
+    "inputPlaceholder": "Taip soalan anda...",
+    "error": "Maaf, ralat berlaku. Sila cuba lagi."
+  },
   "challenge": {
     "title": "Mod Cabaran",
     "combo": "KOMBO",

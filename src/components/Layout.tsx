@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, BarChart3, Settings, GraduationCap, Sparkles, Zap } from 'lucide-react';
+import { BookOpen, BarChart3, Settings, GraduationCap, Sparkles, Zap, Github } from 'lucide-react';
 import { useDevice } from '../hooks/useDevice';
 import { useUserStore } from '../stores/userStore';
 
@@ -32,10 +32,19 @@ export function Layout({ children }: LayoutProps) {
               <div className="w-12 h-12 shrink-0 rounded-2xl bg-linear-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-lg">
                 <GraduationCap className="w-7 h-7 text-white" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <h1 className="text-xl font-bold text-theme-primary">{t('app.title')}</h1>
                 <p className="text-xs text-theme-secondary leading-tight">{t('app.subtitle')}</p>
               </div>
+              <a
+                href="https://github.com/chihyungchang/3000MostCommonEnglishWords"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-theme-secondary hover:text-theme-primary hover:bg-theme-tertiary transition-colors"
+                title="GitHub"
+              >
+                <Github className="w-5 h-5" />
+              </a>
             </div>
           </div>
 
@@ -96,7 +105,29 @@ export function Layout({ children }: LayoutProps) {
   // Mobile/Tablet Layout
   return (
     <div className="min-h-screen bg-theme-primary">
-      {children}
+      {/* Mobile Header with GitHub */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-theme-primary/80 backdrop-blur-sm border-b border-theme safe-area-pt">
+        <div className="flex items-center justify-between px-4 py-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-linear-to-br from-teal-400 to-teal-600 flex items-center justify-center">
+              <GraduationCap className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-theme-primary">{t('app.title')}</span>
+          </div>
+          <a
+            href="https://github.com/chihyungchang/3000MostCommonEnglishWords"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-theme-secondary hover:text-theme-primary hover:bg-theme-tertiary transition-colors"
+            title="GitHub"
+          >
+            <Github className="w-5 h-5" />
+          </a>
+        </div>
+      </header>
+      <div className="pt-14">
+        {children}
+      </div>
       {/* Bottom Navigation - Claymorphism Style */}
       <nav className="fixed bottom-4 left-4 right-4 clay-float safe-area-pb z-50">
         <div className="max-w-lg mx-auto flex justify-around py-2">

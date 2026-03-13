@@ -95,6 +95,18 @@
   "common": {
     "loading": "Laden..."
   },
+  "ai": {
+    "chatTitle": "KI-Tutor",
+    "learning": "Lerne",
+    "welcomeMessage": "Fragen zu diesem Wort?",
+    "quickQ1": "Wie merke ich es mir?",
+    "quickQ2": "Gib mir einen Satz",
+    "quickQ3": "Was sind Synonyme?",
+    "quickQ4": "Was ist die Wurzel?",
+    "thinking": "Denke nach...",
+    "inputPlaceholder": "Frage eingeben...",
+    "error": "Entschuldigung, ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+  },
   "challenge": {
     "title": "Herausforderungsmodus",
     "combo": "KOMBO",

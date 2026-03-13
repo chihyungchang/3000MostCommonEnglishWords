@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Trophy, Sparkles, Target, CheckCircle2, XCircle, Keyboard } from 'lucide-react';
-import { WordCard, ProgressBar, ResponseButtons } from '../components';
+import { Trophy, Sparkles, Target, CheckCircle2, XCircle, Keyboard, MessageCircle } from 'lucide-react';
+import { WordCard, ProgressBar, ResponseButtons, AIChatDialog } from '../components';
 import { useWordStore } from '../stores/wordStore';
 import { useProgressStore } from '../stores/progressStore';
 import { useUserStore } from '../stores/userStore';
@@ -10,6 +10,7 @@ import { useSettingsStore } from '../stores/themeStore';
 import { useDevice } from '../hooks/useDevice';
 import { calculateXP } from '../algorithms/sm2';
 import { getItem, setItem, removeItem, getTodayString } from '../utils/storage';
+import { aiService } from '../services/aiService';
 import type { ResponseQuality } from '../types';
 
 type LearningPhase = 'new' | 'review';
@@ -86,8 +87,21 @@ export function Learn() {
   });
 
   const [showAnswer, setShowAnswer] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [isChatLoading, setIsChatLoading] = useState(false);
   const sessionSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initRef = useRef(false);
+
+  // AI Chat handler
+  const handleSendMessage = useCallback(async (message: string, context: string) => {
+    setIsChatLoading(true);
+    try {
+      const reply = await aiService.chat(message, context, settings.language);
+      return reply;
+    } finally {
+      setIsChatLoading(false);
+    }
+  }, [settings.language]);
 
   // Destructure for easier access
   const { studyWords, reviewWords, currentPhase, currentIndex, sessionStats, initialized, sessionComplete } = session;
@@ -386,6 +400,8 @@ export function Learn() {
     ? currentIndex + 1
     : studyWords.length + currentIndex + 1;
 
+  const aiConfigured = aiService.isConfigured();
+
   // Desktop Layout
   if (isDesktop) {
     return (
@@ -393,15 +409,28 @@ export function Learn() {
         <div className="max-w-5xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <h1 className="text-2xl font-bold text-theme-primary">{t('learn.title')}</h1>
-              <span className={`clay-badge ${
-                currentPhase === 'new'
-                  ? 'bg-info-light text-info border-2 border-info/30'
-                  : 'bg-success-light text-success border-2 border-success/30'
-              }`}>
-                {currentPhase === 'new' ? t('learn.newWords') : t('learn.review')}
-              </span>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-theme-primary">{t('learn.title')}</h1>
+                <span className={`clay-badge ${
+                  currentPhase === 'new'
+                    ? 'bg-info-light text-info border-2 border-info/30'
+                    : 'bg-success-light text-success border-2 border-success/30'
+                }`}>
+                  {currentPhase === 'new' ? t('learn.newWords') : t('learn.review')}
+                </span>
+              </div>
+              {aiConfigured && (
+                <button
+                  onClick={() => setShowChat(!showChat)}
+                  className={`clay-btn flex items-center gap-2 px-4 py-2 ${
+                    showChat ? 'clay-btn-primary' : ''
+                  }`}
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  <span className="font-medium">{t('ai.chatTitle', 'AI 助教')}</span>
+                </button>
+              )}
             </div>
             <ProgressBar
               current={currentProgress}
@@ -495,6 +524,15 @@ export function Learn() {
             </div>
           </div>
         </div>
+
+        {/* AI Chat Dialog */}
+        <AIChatDialog
+          word={currentWord || null}
+          isOpen={showChat}
+          onClose={() => setShowChat(false)}
+          onSendMessage={handleSendMessage}
+          isLoading={isChatLoading}
+        />
       </div>
     );
   }
@@ -552,6 +590,25 @@ export function Learn() {
           </div>
         </div>
       </main>
+
+      {/* Floating AI Chat Button */}
+      {aiConfigured && (
+        <button
+          onClick={() => setShowChat(true)}
+          className="fixed bottom-28 right-4 w-14 h-14 clay-btn clay-btn-primary rounded-full flex items-center justify-center shadow-lg z-40"
+        >
+          <MessageCircle className="w-6 h-6" />
+        </button>
+      )}
+
+      {/* AI Chat Dialog */}
+      <AIChatDialog
+        word={currentWord || null}
+        isOpen={showChat}
+        onClose={() => setShowChat(false)}
+        onSendMessage={handleSendMessage}
+        isLoading={isChatLoading}
+      />
     </div>
   );
 }

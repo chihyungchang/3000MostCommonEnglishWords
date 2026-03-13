@@ -1,0 +1,7 @@
+name = "vocab-ai-worker"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+# Enable Workers AI binding
+[ai]
+binding = "AI"

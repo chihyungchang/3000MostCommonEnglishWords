@@ -24,4 +24,5 @@ dist-ssr
 *.sw?
 
 .claude
-scripts.env.local
+scripts
+.env.local

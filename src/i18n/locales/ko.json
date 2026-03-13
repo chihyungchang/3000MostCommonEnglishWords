@@ -95,6 +95,18 @@
   "common": {
     "loading": "로딩 중..."
   },
+  "ai": {
+    "chatTitle": "AI 튜터",
+    "learning": "학습 중",
+    "welcomeMessage": "이 단어에 대해 질문이 있으신가요?",
+    "quickQ1": "어떻게 외우나요?",
+    "quickQ2": "문장을 만들어줘",
+    "quickQ3": "동의어가 뭐야?",
+    "quickQ4": "어원이 뭐야?",
+    "thinking": "생각 중...",
+    "inputPlaceholder": "질문을 입력하세요...",
+    "error": "죄송합니다, 오류가 발생했습니다. 다시 시도해주세요."
+  },
   "challenge": {
     "title": "챌린지 모드",
     "combo": "콤보",

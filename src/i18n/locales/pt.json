@@ -95,6 +95,18 @@
   "common": {
     "loading": "Carregando..."
   },
+  "ai": {
+    "chatTitle": "Tutor IA",
+    "learning": "Aprendendo",
+    "welcomeMessage": "Alguma dúvida sobre esta palavra?",
+    "quickQ1": "Como memorizar?",
+    "quickQ2": "Me dê uma frase",
+    "quickQ3": "Quais são os sinônimos?",
+    "quickQ4": "Qual é a raiz?",
+    "thinking": "Pensando...",
+    "inputPlaceholder": "Digite sua pergunta...",
+    "error": "Desculpe, ocorreu um erro. Por favor, tente novamente."
+  },
   "challenge": {
     "title": "Modo Desafio",
     "combo": "COMBO",
