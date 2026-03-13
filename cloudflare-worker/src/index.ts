@@ -94,7 +94,11 @@ function extractContent(aiResponse: unknown): string {
   return "";
 }
 
-async function handleTTS(request: Request, env: Env): Promise<Response> {
+async function handleTTS(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext
+): Promise<Response> {
   try {
     const { text, lang = "en" } = (await request.json()) as {
       text: string;
@@ -130,22 +134,31 @@ async function handleTTS(request: Request, env: Env): Promise<Response> {
       lang: lang,
     })) as { audio: string };
 
-    // Store in R2 cache (async, don't wait)
+    // Store in R2 cache using waitUntil to ensure completion
     if (env.TTS_CACHE && response.audio) {
-      const audioBuffer = Uint8Array.from(atob(response.audio), (c) =>
-        c.charCodeAt(0)
+      ctx.waitUntil(
+        (async () => {
+          try {
+            const audioBuffer = Uint8Array.from(atob(response.audio), (c) =>
+              c.charCodeAt(0)
+            );
+            await env.TTS_CACHE.put(cacheKey, audioBuffer, {
+              httpMetadata: {
+                contentType: "audio/mpeg",
+                cacheControl: "public, max-age=31536000",
+              },
+              customMetadata: {
+                text: text.slice(0, 100),
+                lang,
+                createdAt: new Date().toISOString(),
+              },
+            });
+            console.log("R2 cache saved:", cacheKey);
+          } catch (err) {
+            console.error("R2 cache write error:", err);
+          }
+        })()
       );
-      env.TTS_CACHE.put(cacheKey, audioBuffer, {
-        httpMetadata: {
-          contentType: "audio/mpeg",
-          cacheControl: "public, max-age=31536000",
-        },
-        customMetadata: {
-          text: text.slice(0, 100),
-          lang,
-          createdAt: new Date().toISOString(),
-        },
-      }).catch((err) => console.error("R2 cache write error:", err));
     }
 
     return jsonResponse({ audio: response.audio, cached: false });
@@ -156,7 +169,11 @@ async function handleTTS(request: Request, env: Env): Promise<Response> {
 }
 
 // Word lookup endpoint - returns structured word info with Supabase caching
-async function handleLookup(request: Request, env: Env): Promise<Response> {
+async function handleLookup(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext
+): Promise<Response> {
   try {
     const { word, targetLang = "zh" } = (await request.json()) as {
       word: string;
@@ -181,11 +198,20 @@ async function handleLookup(request: Request, env: Env): Promise<Response> {
           .single();
 
         if (cached) {
-          // Update hit count (async, don't wait)
-          void supabase
-            .from("word_definitions")
-            .update({ hit_count: (cached.hit_count || 0) + 1 })
-            .eq("id", cached.id);
+          // Update hit count using waitUntil
+          ctx.waitUntil(
+            (async () => {
+              try {
+                await supabase
+                  .from("word_definitions")
+                  .update({ hit_count: (cached.hit_count || 0) + 1 })
+                  .eq("id", cached.id);
+                console.log("Hit count updated for:", normalizedWord);
+              } catch (err) {
+                console.error("Hit count update error:", err);
+              }
+            })()
+          );
 
           return jsonResponse({
             phonetic: cached.phonetic,
@@ -259,19 +285,28 @@ async function handleLookup(request: Request, env: Env): Promise<Response> {
       };
     }
 
-    // 4. Store in Supabase cache (async, don't wait)
+    // 4. Store in Supabase cache using waitUntil
     if (supabase && parsed.definition) {
-      void supabase
-        .from("word_definitions")
-        .insert({
-          word: normalizedWord,
-          target_lang: targetLang,
-          phonetic: parsed.phonetic || null,
-          pos: Array.isArray(parsed.pos) ? parsed.pos : null,
-          definition: parsed.definition,
-          example: parsed.example || null,
-          is_phrase: parsed.isPhrase || false,
-        });
+      ctx.waitUntil(
+        (async () => {
+          try {
+            await supabase
+              .from("word_definitions")
+              .insert({
+                word: normalizedWord,
+                target_lang: targetLang,
+                phonetic: parsed.phonetic || null,
+                pos: Array.isArray(parsed.pos) ? parsed.pos : null,
+                definition: parsed.definition,
+                example: parsed.example || null,
+                is_phrase: parsed.isPhrase || false,
+              });
+            console.log("Cached word definition:", normalizedWord);
+          } catch (err) {
+            console.error("Supabase insert error:", err);
+          }
+        })()
+      );
     }
 
     return jsonResponse({
@@ -334,7 +369,7 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
     if (request.method === "OPTIONS") {
@@ -343,13 +378,13 @@ export default {
 
     switch (url.pathname) {
       case "/tts":
-        if (request.method === "POST") return handleTTS(request, env);
+        if (request.method === "POST") return handleTTS(request, env, ctx);
         break;
       case "/chat":
         if (request.method === "POST") return handleChat(request, env);
         break;
       case "/lookup":
-        if (request.method === "POST") return handleLookup(request, env);
+        if (request.method === "POST") return handleLookup(request, env, ctx);
         break;
       case "/health":
         return jsonResponse({ status: "ok", timestamp: Date.now() });
