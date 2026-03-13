@@ -107,7 +107,9 @@ export function getWordsToReview(
   const dueWords: { wordId: string; dueDate: Date }[] = [];
 
   progressMap.forEach((progress, wordId) => {
-    if (isDueForReview(progress) && progress.status !== 'new') {
+    // Only include words that have been reviewed at least once
+    // Exclude 'new' status and words with reviewCount === 0 (just started learning but not yet reviewed)
+    if (isDueForReview(progress) && progress.status !== 'new' && progress.reviewCount > 0) {
       dueWords.push({
         wordId,
         dueDate: new Date(progress.nextReviewDate),

@@ -131,7 +131,14 @@ export function Learn() {
       const savedSession = getItem<LearnSession | null>(SESSION_KEY, null);
 
       // Check if we have a valid saved session from today
-      if (savedSession && savedSession.date === today && savedSession.studyWords.length + savedSession.reviewWords.length > 0) {
+      // Also validate that total words is reasonable (not more than 2x daily goal + 10 buffer)
+      const maxSessionWords = stats.dailyGoal * 2 + 10;
+      const savedSessionValid = savedSession
+        && savedSession.date === today
+        && savedSession.studyWords.length + savedSession.reviewWords.length > 0
+        && savedSession.studyWords.length + savedSession.reviewWords.length <= maxSessionWords;
+
+      if (savedSessionValid) {
         // Restore saved session using single setState
         // This is intentional initialization from localStorage, not a cascading render
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -148,7 +155,9 @@ export function Learn() {
         // Create new session
         const wordIds = words.map((w) => w.id);
         const newWords = getNewWords(wordIds, stats.dailyGoal);
-        const dueWords = getWordsToReview(50);
+        // Limit review words to be proportional to daily goal (max 1:1 ratio)
+        const reviewLimit = Math.max(stats.dailyGoal, 10);
+        const dueWords = getWordsToReview(reviewLimit);
 
         // Mark new words as learning (only those not already marked)
         newWords.forEach((id) => startLearning(id));
