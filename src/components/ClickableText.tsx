@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { WordPopup } from './WordPopup';
 
 interface ClickableTextProps {
@@ -75,13 +76,14 @@ export function ClickableText({ text, className = '', highlightWord }: Clickable
         })}
       </span>
 
-      {popup && (
+      {popup && createPortal(
         <WordPopup
           word={popup.word}
           context={text}
           position={popup.position}
           onClose={() => setPopup(null)}
-        />
+        />,
+        document.body
       )}
     </>
   );
