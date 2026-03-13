@@ -111,11 +111,11 @@ async function handleLookup(request: Request, env: Env): Promise<Response> {
     const outputLang = langMap[targetLang] || "中文";
 
     // Use a simpler, non-reasoning model for dictionary lookups
-    const systemPrompt = `You are a JSON dictionary. Output format: {"phonetic":"/...IPA.../","pos":["n" or "v" or "adj" etc],"definition":"meaning in ${outputLang}","example":"English sentence","contextMeaning":"context meaning in ${outputLang}","isPhrase":true/false}. Output ONLY the JSON object, nothing else.`;
+    const systemPrompt = `You are a JSON dictionary. Define EXACTLY the word given, not related words. Output in ${outputLang}. Format: {"phonetic":"/IPA/","pos":["prep"/"n"/"v"/"adj"/"adv"/"conj"/"det"/"pron"],"definition":"meaning","example":"sentence using this exact word","contextMeaning":"meaning in given context","isPhrase":false}. Output ONLY JSON.`;
 
     const userPrompt = context
-      ? `Word: "${word}" | Context: "${context}"`
-      : `Word: "${word}"`;
+      ? `Define "${word}" as used in: "${context}"`
+      : `Define "${word}"`;
 
     // Use llama for simpler, non-reasoning JSON output
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
