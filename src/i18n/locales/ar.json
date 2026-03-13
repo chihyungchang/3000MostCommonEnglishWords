@@ -95,6 +95,13 @@
   "common": {
     "loading": "جاري التحميل..."
   },
+  "wordPopup": {
+    "speak": "نطق",
+    "definition": "التعريف",
+    "example": "مثال",
+    "phrase": "عبارة",
+    "error": "فشل التحميل"
+  },
   "ai": {
     "chatTitle": "مساعد الذكاء الاصطناعي",
     "learning": "يتعلم",

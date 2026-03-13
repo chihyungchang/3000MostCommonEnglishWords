@@ -95,6 +95,13 @@
   "common": {
     "loading": "Cargando..."
   },
+  "wordPopup": {
+    "speak": "Pronunciar",
+    "definition": "Definición",
+    "example": "Ejemplo",
+    "phrase": "Frase",
+    "error": "Error al cargar"
+  },
   "ai": {
     "chatTitle": "Tutor IA",
     "learning": "Aprendiendo",

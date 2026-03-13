@@ -15,9 +15,9 @@ export interface WordLookupResult {
   pos?: string[];
   definition?: string;
   example?: string;
-  contextMeaning?: string;
   isPhrase?: boolean;
   error?: string;
+  cached?: boolean;
 }
 
 class AIService {

@@ -95,6 +95,13 @@
   "common": {
     "loading": "Laden..."
   },
+  "wordPopup": {
+    "speak": "Aussprechen",
+    "definition": "Definition",
+    "example": "Beispiel",
+    "phrase": "Phrase",
+    "error": "Laden fehlgeschlagen"
+  },
   "ai": {
     "chatTitle": "KI-Tutor",
     "learning": "Lerne",

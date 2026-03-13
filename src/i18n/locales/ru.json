@@ -95,6 +95,13 @@
   "common": {
     "loading": "Загрузка..."
   },
+  "wordPopup": {
+    "speak": "Произнести",
+    "definition": "Определение",
+    "example": "Пример",
+    "phrase": "Фраза",
+    "error": "Ошибка загрузки"
+  },
   "ai": {
     "chatTitle": "ИИ-репетитор",
     "learning": "Изучаем",

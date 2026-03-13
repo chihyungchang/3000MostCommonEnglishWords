@@ -95,6 +95,13 @@
   "common": {
     "loading": "読み込み中..."
   },
+  "wordPopup": {
+    "speak": "発音",
+    "definition": "定義",
+    "example": "例文",
+    "phrase": "フレーズ",
+    "error": "読み込み失敗"
+  },
   "ai": {
     "chatTitle": "AIチューター",
     "learning": "学習中",

@@ -198,3 +198,49 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
+
+-- 7. 单词定义缓存表 (Word Definitions Cache)
+CREATE TABLE IF NOT EXISTS public.word_definitions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  word TEXT NOT NULL,
+  target_lang TEXT NOT NULL DEFAULT 'zh',
+
+  phonetic TEXT,
+  pos TEXT[],
+  definition TEXT NOT NULL,
+  example TEXT,
+  is_phrase BOOLEAN DEFAULT FALSE,
+
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  hit_count INTEGER DEFAULT 0,
+
+  UNIQUE (word, target_lang)
+);
+
+CREATE INDEX IF NOT EXISTS idx_word_definitions_lookup
+  ON public.word_definitions(word, target_lang);
+
+DROP TRIGGER IF EXISTS update_word_definitions_updated_at ON public.word_definitions;
+CREATE TRIGGER update_word_definitions_updated_at
+  BEFORE UPDATE ON public.word_definitions
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE public.word_definitions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can read word definitions" ON public.word_definitions;
+CREATE POLICY "Anyone can read word definitions"
+  ON public.word_definitions FOR SELECT
+  USING (true);
+
+DROP POLICY IF EXISTS "Service role can insert definitions" ON public.word_definitions;
+CREATE POLICY "Service role can insert definitions"
+  ON public.word_definitions FOR INSERT
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role can update definitions" ON public.word_definitions;
+CREATE POLICY "Service role can update definitions"
+  ON public.word_definitions FOR UPDATE
+  USING (true);

@@ -178,6 +178,43 @@ export interface Database {
           updated_at?: string;
         };
       };
+      word_definitions: {
+        Row: {
+          id: string;
+          word: string;
+          target_lang: string;
+          phonetic: string | null;
+          pos: string[] | null;
+          definition: string;
+          example: string | null;
+          is_phrase: boolean;
+          created_at: string;
+          updated_at: string;
+          hit_count: number;
+        };
+        Insert: {
+          id?: string;
+          word: string;
+          target_lang?: string;
+          phonetic?: string | null;
+          pos?: string[] | null;
+          definition: string;
+          example?: string | null;
+          is_phrase?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          hit_count?: number;
+        };
+        Update: {
+          phonetic?: string | null;
+          pos?: string[] | null;
+          definition?: string;
+          example?: string | null;
+          is_phrase?: boolean;
+          updated_at?: string;
+          hit_count?: number;
+        };
+      };
     };
   };
 }

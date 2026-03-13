@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Volume2, Loader2, BookOpen, Quote, Link2 } from 'lucide-react';
+import { X, Volume2, Loader2, BookOpen, Quote } from 'lucide-react';
 import { aiService } from '../services/aiService';
 import { useSettingsStore } from '../stores/themeStore';
 
@@ -10,7 +10,6 @@ interface WordInfo {
   pos?: string[];
   definition?: string;
   example?: string;
-  contextMeaning?: string;
   isPhrase?: boolean;
   phraseWords?: string[];
 }
@@ -75,7 +74,6 @@ export function WordPopup({ word, context, position, onClose }: WordPopupProps) 
           pos: Array.isArray(result.pos) ? result.pos : (result.pos ? [result.pos] : undefined),
           definition: result.definition,
           example: result.example,
-          contextMeaning: result.contextMeaning,
           isPhrase: result.isPhrase,
         });
       } catch (err) {
@@ -197,19 +195,6 @@ export function WordPopup({ word, context, position, onClose }: WordPopupProps) 
                 </span>
               </div>
               <p className="text-sm text-theme-primary">{info.definition}</p>
-            </div>
-          )}
-
-          {/* Context Meaning */}
-          {info.contextMeaning && info.contextMeaning !== info.definition && (
-            <div className="clay-card p-3 bg-yellow-50/50 dark:bg-yellow-900/10">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Link2 className="w-3.5 h-3.5 text-yellow-600" />
-                <span className="text-xs font-semibold text-theme-secondary">
-                  {t('wordPopup.contextMeaning', 'In this context')}
-                </span>
-              </div>
-              <p className="text-sm text-theme-primary">{info.contextMeaning}</p>
             </div>
           )}
 

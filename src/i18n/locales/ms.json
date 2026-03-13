@@ -95,6 +95,13 @@
   "common": {
     "loading": "Memuatkan..."
   },
+  "wordPopup": {
+    "speak": "Sebut",
+    "definition": "Definisi",
+    "example": "Contoh",
+    "phrase": "Frasa",
+    "error": "Gagal memuatkan"
+  },
   "ai": {
     "chatTitle": "Tutor AI",
     "learning": "Sedang belajar",

@@ -95,6 +95,13 @@
   "common": {
     "loading": "로딩 중..."
   },
+  "wordPopup": {
+    "speak": "발음",
+    "definition": "정의",
+    "example": "예문",
+    "phrase": "구문",
+    "error": "로딩 실패"
+  },
   "ai": {
     "chatTitle": "AI 튜터",
     "learning": "학습 중",
