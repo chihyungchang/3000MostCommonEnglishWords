@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Volume2, Loader2, BookOpen, Quote, Link2 } from 'lucide-react';
 import { aiService } from '../services/aiService';
@@ -32,35 +32,51 @@ export function WordPopup({ word, context, position, onClose }: WordPopupProps) 
   const popupRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Adjust position to keep popup in viewport
-  const [adjustedPosition, setAdjustedPosition] = useState(position);
+  // Calculate position once on mount - use fixed popup size estimate to avoid jumping
+  const [adjustedPosition] = useState(() => {
+    const POPUP_WIDTH = 320;
+    const POPUP_HEIGHT = 300; // Estimated max height
+    const viewport = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
 
-  useEffect(() => {
-    if (popupRef.current) {
-      const rect = popupRef.current.getBoundingClientRect();
-      const viewport = {
-        width: window.innerWidth,
-        height: window.innerHeight,
-      };
+    let x = position.x;
+    let y = position.y;
 
-      let x = position.x;
-      let y = position.y;
-
-      // Adjust horizontal position
-      if (x + rect.width > viewport.width - 20) {
-        x = viewport.width - rect.width - 20;
-      }
-      if (x < 20) x = 20;
-
-      // Adjust vertical position
-      if (y + rect.height > viewport.height - 20) {
-        y = position.y - rect.height - 10;
-      }
-      if (y < 20) y = 20;
-
-      setAdjustedPosition({ x, y });
+    // Adjust horizontal position
+    if (x + POPUP_WIDTH > viewport.width - 20) {
+      x = viewport.width - POPUP_WIDTH - 20;
     }
-  }, [position, info]);
+    if (x < 20) x = 20;
+
+    // Adjust vertical position - show above if not enough space below
+    if (y + POPUP_HEIGHT > viewport.height - 20) {
+      y = Math.max(20, position.y - POPUP_HEIGHT - 10);
+    }
+
+    return { x, y };
+  });
+
+  // Additional adjustment after render if needed (only once)
+  const hasAdjusted = useRef(false);
+  useLayoutEffect(() => {
+    if (popupRef.current && !hasAdjusted.current) {
+      hasAdjusted.current = true;
+      const rect = popupRef.current.getBoundingClientRect();
+
+      // Only adjust if popup is actually out of viewport
+      if (rect.bottom > window.innerHeight - 10 || rect.right > window.innerWidth - 10) {
+        popupRef.current.style.transition = 'none';
+        if (rect.right > window.innerWidth - 10) {
+          popupRef.current.style.left = `${window.innerWidth - rect.width - 20}px`;
+        }
+        if (rect.bottom > window.innerHeight - 10) {
+          popupRef.current.style.top = `${Math.max(20, position.y - rect.height - 10)}px`;
+        }
+      }
+    }
+  }, [position.y]);
 
   // Fetch word info
   useEffect(() => {
@@ -75,7 +91,7 @@ export function WordPopup({ word, context, position, onClose }: WordPopupProps) 
         setInfo({
           word,
           phonetic: result.phonetic,
-          pos: Array.isArray(result.pos) ? result.pos : [result.pos].filter(Boolean),
+          pos: Array.isArray(result.pos) ? result.pos : (result.pos ? [result.pos] : undefined),
           definition: result.definition,
           example: result.example,
           contextMeaning: result.contextMeaning,

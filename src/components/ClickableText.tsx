@@ -61,10 +61,10 @@ export function ClickableText({ text, className = '', highlightWord }: Clickable
               <span
                 key={index}
                 onClick={(e) => handleWordClick(token.value, e)}
-                className={`cursor-pointer transition-colors duration-150 rounded px-0.5 -mx-0.5 ${
+                className={`cursor-pointer transition-all duration-150 rounded px-0.5 -mx-0.5 ${
                   isHighlighted
-                    ? 'bg-accent/20 text-accent font-semibold hover:bg-accent/30'
-                    : 'hover:bg-accent/10 hover:text-accent'
+                    ? 'bg-accent/20 text-accent font-semibold hover:bg-accent/30 hover:underline'
+                    : 'hover:text-accent hover:underline hover:decoration-accent/50 decoration-2 underline-offset-2'
                 }`}
               >
                 {token.value}
