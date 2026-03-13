@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Volume2, Loader2, BookOpen, Quote, Link2 } from 'lucide-react';
 import { aiService } from '../services/aiService';
@@ -32,10 +32,11 @@ export function WordPopup({ word, context, position, onClose }: WordPopupProps) 
   const popupRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Calculate position once on mount - use fixed popup size estimate to avoid jumping
-  const [adjustedPosition] = useState(() => {
+  // Calculate position once on mount - use fixed popup size estimate
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const adjustedPosition = useMemo(() => {
     const POPUP_WIDTH = 320;
-    const POPUP_HEIGHT = 300; // Estimated max height
+    const POPUP_HEIGHT = 300;
     const viewport = {
       width: window.innerWidth,
       height: window.innerHeight,
@@ -56,27 +57,7 @@ export function WordPopup({ word, context, position, onClose }: WordPopupProps) 
     }
 
     return { x, y };
-  });
-
-  // Additional adjustment after render if needed (only once)
-  const hasAdjusted = useRef(false);
-  useLayoutEffect(() => {
-    if (popupRef.current && !hasAdjusted.current) {
-      hasAdjusted.current = true;
-      const rect = popupRef.current.getBoundingClientRect();
-
-      // Only adjust if popup is actually out of viewport
-      if (rect.bottom > window.innerHeight - 10 || rect.right > window.innerWidth - 10) {
-        popupRef.current.style.transition = 'none';
-        if (rect.right > window.innerWidth - 10) {
-          popupRef.current.style.left = `${window.innerWidth - rect.width - 20}px`;
-        }
-        if (rect.bottom > window.innerHeight - 10) {
-          popupRef.current.style.top = `${Math.max(20, position.y - rect.height - 10)}px`;
-        }
-      }
-    }
-  }, [position.y]);
+  }, []);
 
   // Fetch word info
   useEffect(() => {
@@ -154,7 +135,7 @@ export function WordPopup({ word, context, position, onClose }: WordPopupProps) 
   return (
     <div
       ref={popupRef}
-      className="fixed z-50 clay-card p-4 w-80 max-w-[calc(100vw-40px)] shadow-xl animate-in fade-in zoom-in-95 duration-200"
+      className="fixed z-50 clay-card p-4 w-80 max-w-[calc(100vw-40px)] shadow-xl"
       style={{
         left: adjustedPosition.x,
         top: adjustedPosition.y,
