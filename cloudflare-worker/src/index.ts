@@ -236,19 +236,16 @@ async function handleLookup(
     // 2. Call AI to generate definition
     const outputLang = langMap[targetLang] || "中文";
 
-    const systemPrompt = `You are a dictionary API. Return JSON for English word definitions. "definition" in ${outputLang}, "example" in English.`;
-
-    const userPrompt = `{"word":"${word}"}`;
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const aiResponse = await env.AI.run("@cf/zai-org/glm-4.7-flash" as any, {
+    const aiResponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct" as any, {
       messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
+        {
+          role: "user",
+          content: `Define "${word}" in JSON: {"phonetic":"/IPA/","pos":["n"/"v"/"adj"/"adv"/"prep"],"definition":"${outputLang}释义","example":"English sentence"}`,
+        },
       ],
-      response_format: { type: "json_object" },
-      max_tokens: 256,
-      temperature: 0.2,
+      max_tokens: 200,
+      temperature: 0.1,
     });
 
     const responseText = extractContent(aiResponse);
