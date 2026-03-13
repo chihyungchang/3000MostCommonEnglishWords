@@ -240,13 +240,13 @@ Format: {"phonetic":"/IPA/","pos":["n"/"v"/"adj"/"adv"/"prep"/"conj"/"pron"/"det
     const userPrompt = `Define "${word}"`;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const aiResponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct" as any, {
+    const aiResponse = await env.AI.run("@cf/zai-org/glm-4.7-flash" as any, {
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      max_tokens: 512,
-      temperature: 0.3,
+      max_tokens: 256,
+      temperature: 0.2,
     });
 
     const responseText = extractContent(aiResponse);
