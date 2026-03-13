@@ -9,6 +9,17 @@ interface TTSResponse {
   audio: string;
 }
 
+export interface WordLookupResult {
+  word?: string;
+  phonetic?: string;
+  pos?: string[];
+  definition?: string;
+  example?: string;
+  contextMeaning?: string;
+  isPhrase?: boolean;
+  error?: string;
+}
+
 class AIService {
   private audioCache: Map<string, string> = new Map();
 
@@ -58,6 +69,31 @@ class AIService {
     } catch (error) {
       console.error('Audio playback error:', error);
       return false;
+    }
+  }
+
+  async lookup(word: string, context?: string, targetLang: string = 'zh'): Promise<WordLookupResult> {
+    if (!this.isConfigured()) {
+      throw new Error('AI service not configured');
+    }
+
+    try {
+      const response = await fetch(`${WORKER_URL}/lookup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ word, context, targetLang }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || `Lookup request failed: ${response.status}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Lookup Error:', error);
+      throw error;
     }
   }
 

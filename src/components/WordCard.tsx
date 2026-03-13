@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Volume2, Sparkles, BookOpen, Quote, History, Link2 } from 'lucide-react';
 import type { Word } from '../types';
 import { useSpeech } from '../hooks/useSpeech';
+import { ClickableText } from './ClickableText';
 
 interface WordCardProps {
   word: Word;
@@ -160,9 +161,11 @@ export function WordCard({ word, showAnswer, onFlip, onPractice, size = 'normal'
                     {t('card.definition')}
                   </p>
                 </div>
-                <p className={`text-theme-primary font-medium ${isLarge ? 'text-xl' : 'text-base'}`}>
-                  {word.definition}
-                </p>
+                <ClickableText
+                  text={word.definition}
+                  className={`text-theme-primary font-medium ${isLarge ? 'text-xl' : 'text-base'}`}
+                  highlightWord={word.word}
+                />
               </div>
             )}
 
@@ -190,7 +193,7 @@ export function WordCard({ word, showAnswer, onFlip, onPractice, size = 'normal'
                   </button>
                 </div>
                 <p className={`text-theme-primary italic font-medium ${isLarge ? 'text-lg' : 'text-base'}`}>
-                  "{word.example}"
+                  "<ClickableText text={word.example} highlightWord={word.word} />"
                 </p>
               </div>
             )}

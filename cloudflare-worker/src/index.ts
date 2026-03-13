@@ -95,6 +95,75 @@ async function handleTTS(request: Request, env: Env): Promise<Response> {
   }
 }
 
+// Word lookup endpoint - returns structured word info
+async function handleLookup(request: Request, env: Env): Promise<Response> {
+  try {
+    const { word, context, targetLang = "zh" } = (await request.json()) as {
+      word: string;
+      context?: string;
+      targetLang?: string;
+    };
+
+    if (!word) {
+      return jsonResponse({ error: "Word is required" }, 400);
+    }
+
+    const outputLang = langMap[targetLang] || "中文";
+
+    // Use a simpler, non-reasoning model for dictionary lookups
+    const systemPrompt = `You are a JSON dictionary. Output format: {"phonetic":"/...IPA.../","pos":["n" or "v" or "adj" etc],"definition":"meaning in ${outputLang}","example":"English sentence","contextMeaning":"context meaning in ${outputLang}","isPhrase":true/false}. Output ONLY the JSON object, nothing else.`;
+
+    const userPrompt = context
+      ? `Word: "${word}" | Context: "${context}"`
+      : `Word: "${word}"`;
+
+    // Use llama for simpler, non-reasoning JSON output
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const aiResponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct" as any, {
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      max_tokens: 512,
+      temperature: 0.3,
+    });
+
+    const responseText = extractContent(aiResponse);
+
+    // Try to extract and parse JSON - find the last complete JSON object
+    try {
+      // Find all potential JSON objects
+      const jsonMatches = responseText.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g);
+      if (jsonMatches && jsonMatches.length > 0) {
+        // Try from the last match (most likely to be the final answer)
+        for (let i = jsonMatches.length - 1; i >= 0; i--) {
+          try {
+            const parsed = JSON.parse(jsonMatches[i]);
+            // Validate it has expected fields
+            if (parsed.phonetic !== undefined || parsed.definition !== undefined || parsed.pos !== undefined) {
+              return jsonResponse(parsed);
+            }
+          } catch {
+            continue;
+          }
+        }
+      }
+    } catch {
+      // If JSON parsing fails, return raw definition
+    }
+
+    // Fallback: try to extract key info from text
+    return jsonResponse({
+      word,
+      definition: responseText.slice(0, 200),
+    });
+  } catch (error) {
+    console.error("Lookup Error:", error);
+    const msg = error instanceof Error ? error.message : String(error);
+    return jsonResponse({ error: msg }, 500);
+  }
+}
+
 async function handleChat(request: Request, env: Env): Promise<Response> {
   try {
     const {
@@ -157,6 +226,9 @@ export default {
         break;
       case "/chat":
         if (request.method === "POST") return handleChat(request, env);
+        break;
+      case "/lookup":
+        if (request.method === "POST") return handleLookup(request, env);
         break;
       case "/health":
         return jsonResponse({ status: "ok", timestamp: Date.now() });

@@ -107,6 +107,14 @@
     "inputPlaceholder": "Type your question...",
     "error": "Sorry, an error occurred. Please try again."
   },
+  "wordPopup": {
+    "speak": "Pronounce",
+    "definition": "Definition",
+    "example": "Example",
+    "contextMeaning": "In this context",
+    "phrase": "Phrase",
+    "error": "Failed to load"
+  },
   "challenge": {
     "title": "Challenge Mode",
     "combo": "COMBO",

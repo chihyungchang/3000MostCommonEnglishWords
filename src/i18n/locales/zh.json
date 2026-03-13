@@ -107,6 +107,14 @@
     "inputPlaceholder": "输入你的问题...",
     "error": "抱歉，出现了错误，请重试。"
   },
+  "wordPopup": {
+    "speak": "发音",
+    "definition": "释义",
+    "example": "例句",
+    "contextMeaning": "在此语境中",
+    "phrase": "词组",
+    "error": "加载失败"
+  },
   "challenge": {
     "title": "挑战模式",
     "combo": "连击",
