@@ -52,12 +52,17 @@ function getSupabaseClient(env: Env): SupabaseClient | null {
 }
 
 // Generate TTS cache key using SHA-256 hash
-async function generateTTSCacheKey(text: string, lang: string): Promise<string> {
+async function generateTTSCacheKey(
+  text: string,
+  lang: string,
+): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(text.toLowerCase().trim());
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
   return `tts/${lang}/${hashHex.slice(0, 16)}.mp3`;
 }
 
@@ -97,7 +102,7 @@ function extractContent(aiResponse: unknown): string {
 async function handleTTS(
   request: Request,
   env: Env,
-  ctx: ExecutionContext
+  ctx: ExecutionContext,
 ): Promise<Response> {
   try {
     const { text, lang = "en" } = (await request.json()) as {
@@ -119,7 +124,7 @@ async function handleTTS(
         if (cached) {
           const audioBuffer = await cached.arrayBuffer();
           const base64 = btoa(
-            String.fromCharCode(...new Uint8Array(audioBuffer))
+            String.fromCharCode(...new Uint8Array(audioBuffer)),
           );
           return jsonResponse({ audio: base64, cached: true });
         }
@@ -140,7 +145,7 @@ async function handleTTS(
         (async () => {
           try {
             const audioBuffer = Uint8Array.from(atob(response.audio), (c) =>
-              c.charCodeAt(0)
+              c.charCodeAt(0),
             );
             await env.TTS_CACHE.put(cacheKey, audioBuffer, {
               httpMetadata: {
@@ -157,7 +162,7 @@ async function handleTTS(
           } catch (err) {
             console.error("R2 cache write error:", err);
           }
-        })()
+        })(),
       );
     }
 
@@ -172,7 +177,7 @@ async function handleTTS(
 async function handleLookup(
   request: Request,
   env: Env,
-  ctx: ExecutionContext
+  ctx: ExecutionContext,
 ): Promise<Response> {
   try {
     const { word, targetLang = "zh" } = (await request.json()) as {
@@ -210,7 +215,7 @@ async function handleLookup(
               } catch (err) {
                 console.error("Hit count update error:", err);
               }
-            })()
+            })(),
           );
 
           return jsonResponse({
@@ -231,10 +236,9 @@ async function handleLookup(
     // 2. Call AI to generate definition
     const outputLang = langMap[targetLang] || "中文";
 
-    const systemPrompt = `Output JSON only. No explanation. No markdown.`;
+    const systemPrompt = `You are a dictionary API. Return JSON for English word definitions. "definition" in ${outputLang}, "example" in English.`;
 
-    const userPrompt = `Word: "${word}"
-Return: {"phonetic":"/IPA/","pos":["n" or "v" or "adj" or "adv" or "prep" or "conj" or "pron"],"definition":"${outputLang}释义","example":"English example sentence","isPhrase":false}`;
+    const userPrompt = `{"word":"${word}"}`;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const aiResponse = await env.AI.run("@cf/zai-org/glm-4.7-flash" as any, {
@@ -242,6 +246,7 @@ Return: {"phonetic":"/IPA/","pos":["n" or "v" or "adj" or "adv" or "prep" or "co
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
+      response_format: { type: "json_object" },
       max_tokens: 256,
       temperature: 0.2,
     });
@@ -258,7 +263,9 @@ Return: {"phonetic":"/IPA/","pos":["n" or "v" or "adj" or "adv" or "prep" or "co
     } | null = null;
 
     try {
-      const jsonMatches = responseText.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g);
+      const jsonMatches = responseText.match(
+        /\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g,
+      );
       if (jsonMatches && jsonMatches.length > 0) {
         for (let i = jsonMatches.length - 1; i >= 0; i--) {
           try {
@@ -291,22 +298,20 @@ Return: {"phonetic":"/IPA/","pos":["n" or "v" or "adj" or "adv" or "prep" or "co
       ctx.waitUntil(
         (async () => {
           try {
-            await supabase
-              .from("word_definitions")
-              .insert({
-                word: normalizedWord,
-                target_lang: targetLang,
-                phonetic: parsed.phonetic || null,
-                pos: Array.isArray(parsed.pos) ? parsed.pos : null,
-                definition: parsed.definition,
-                example: parsed.example || null,
-                is_phrase: parsed.isPhrase || false,
-              });
+            await supabase.from("word_definitions").insert({
+              word: normalizedWord,
+              target_lang: targetLang,
+              phonetic: parsed.phonetic || null,
+              pos: Array.isArray(parsed.pos) ? parsed.pos : null,
+              definition: parsed.definition,
+              example: parsed.example || null,
+              is_phrase: parsed.isPhrase || false,
+            });
             console.log("Cached word definition:", normalizedWord);
           } catch (err) {
             console.error("Supabase insert error:", err);
           }
-        })()
+        })(),
       );
     }
 
@@ -353,6 +358,7 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
         { role: "system", content: systemPrompt },
         { role: "user", content: `Word: "${word}". ${message}` },
       ],
+      stream: false,
       max_tokens: 512,
       temperature: 0.3,
     });
@@ -370,7 +376,11 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
 }
 
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(
+    request: Request,
+    env: Env,
+    ctx: ExecutionContext,
+  ): Promise<Response> {
     const url = new URL(request.url);
 
     if (request.method === "OPTIONS") {
