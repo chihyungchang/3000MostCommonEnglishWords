@@ -237,15 +237,38 @@ async function handleLookup(
     const outputLang = langMap[targetLang] || "中文";
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const aiResponse = await env.AI.run("@cf/meta/llama-3.2-3b-instruct" as any, {
+    const aiResponse = await env.AI.run("@cf/meta/llama-3.2-3b-instruct", {
       messages: [
         {
+          role: "system",
+          content:
+            "You are a dictionary API. Always return valid JSON only. No explanation.",
+        },
+        {
           role: "user",
-          content: `Define English word "${word}". Reply JSON: {"phonetic":"/IPA/","pos":["n"or"v"or"adj"or"adv"],"definition":"${outputLang}","example":"He/She/They..."}`,
+          content: `Define the English word "${word}".
+
+Return ONLY valid JSON with this exact schema:
+
+{
+  "phonetic": "/fəˈnɛtɪk/",
+  "pos": ["noun"],
+  "definition": "${outputLang} meaning",
+  "example": "Example English sentence using the word.",
+  "cached": false
+}
+
+Rules:
+- phonetic: IPA pronunciation
+- pos: part of speech (noun, verb, adjective, adverb, preposition, etc.)
+- definition: translate the meaning into ${outputLang}
+- example: simple natural English sentence
+- cached must always be false
+- Output JSON only. No markdown. No explanation.`,
         },
       ],
-      max_tokens: 150,
-      temperature: 0.2,
+      max_tokens: 120,
+      temperature: 0.1,
     });
 
     const responseText = extractContent(aiResponse);
@@ -350,14 +373,17 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
       : `English tutor. Answer in ${outputLang}. Max 30 words.`;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const aiResponse = await env.AI.run("@cf/meta/llama-3.2-3b-instruct" as any, {
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: message },
-      ],
-      max_tokens: 100,
-      temperature: 0.5,
-    });
+    const aiResponse = await env.AI.run(
+      "@cf/meta/llama-3.2-3b-instruct" as any,
+      {
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: message },
+        ],
+        max_tokens: 100,
+        temperature: 0.5,
+      },
+    );
 
     const responseText = extractContent(aiResponse);
 

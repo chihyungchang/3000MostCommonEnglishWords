@@ -132,7 +132,11 @@
   {
     "word": "according to",
     "pos": ["prep"],
-    "level": "A2"
+    "level": "A2",
+    "phonetic": "/əˈkɔːr.dɪŋ tuː/",
+    "audio": "https://api.dictionaryapi.dev/media/pronunciations/en/according-to-us.mp3",
+    "definition": "As stated by or reported by someone; based on the opinion, report, or authority of someone.",
+    "example": "According to the weather report, it will rain tomorrow."
   },
   {
     "word": "account",
