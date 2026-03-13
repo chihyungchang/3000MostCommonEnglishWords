@@ -1,9 +1,10 @@
-import { useCallback, useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useRef } from 'react';
+import { aiService } from '../services/aiService';
 
 interface UseSpeechReturn {
   speak: (text: string, id?: string) => void;
   speaking: boolean;
-  speakingId: string | null; // Which content is currently speaking
+  speakingId: string | null;
   supported: boolean;
   stop: () => void;
 }
@@ -11,82 +12,59 @@ interface UseSpeechReturn {
 export function useSpeech(): UseSpeechReturn {
   const [speaking, setSpeaking] = useState(false);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Load voices - they may load asynchronously
-  useEffect(() => {
-    if (!supported) return;
-
-    const loadVoices = () => {
-      const availableVoices = window.speechSynthesis.getVoices();
-      if (availableVoices.length > 0) {
-        setVoices(availableVoices);
-      }
-    };
-
-    loadVoices();
-    window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
-
-    return () => {
-      window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
-    };
-  }, [supported]);
+  // Worker TTS is always supported if configured
+  const supported = aiService.isConfigured();
 
   const stop = useCallback(() => {
-    if (supported) {
-      window.speechSynthesis.cancel();
-      setSpeaking(false);
-      setSpeakingId(null);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
     }
-  }, [supported]);
+    setSpeaking(false);
+    setSpeakingId(null);
+  }, []);
 
   const speak = useCallback(
-    (text: string, id?: string) => {
+    async (text: string, id?: string) => {
       if (!supported || !text) return;
 
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
+      // Stop any ongoing audio
+      stop();
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
-      utterance.rate = 1.0; // Normal speed
-      utterance.pitch = 1.0; // Normal pitch
-      
+      setSpeaking(true);
+      setSpeakingId(id || 'default');
 
-      // Try to find a good English voice - prefer female voices for clarity
-      if (voices.length > 0) {
-        // Priority: US English female > US English > GB English > any English
-        const preferredVoice =
-          voices.find((v) => v.lang === 'en-US' && v.name.toLowerCase().includes('female')) ||
-          voices.find((v) => v.lang === 'en-US' && (v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Victoria'))) ||
-          voices.find((v) => v.lang === 'en-US') ||
-          voices.find((v) => v.lang === 'en-GB') ||
-          voices.find((v) => v.lang.startsWith('en'));
-
-        if (preferredVoice) {
-          utterance.voice = preferredVoice;
+      try {
+        const audioBase64 = await aiService.pronounce(text, 'en');
+        if (!audioBase64) {
+          throw new Error('Failed to get audio');
         }
+
+        const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
+        audioRef.current = audio;
+
+        audio.onended = () => {
+          setSpeaking(false);
+          setSpeakingId(null);
+          audioRef.current = null;
+        };
+
+        audio.onerror = () => {
+          setSpeaking(false);
+          setSpeakingId(null);
+          audioRef.current = null;
+        };
+
+        await audio.play();
+      } catch (error) {
+        console.error('TTS Error:', error);
+        setSpeaking(false);
+        setSpeakingId(null);
       }
-
-      utterance.onstart = () => {
-        setSpeaking(true);
-        setSpeakingId(id || 'default');
-      };
-      utterance.onend = () => {
-        setSpeaking(false);
-        setSpeakingId(null);
-      };
-      utterance.onerror = () => {
-        setSpeaking(false);
-        setSpeakingId(null);
-      };
-
-      utteranceRef.current = utterance;
-      window.speechSynthesis.speak(utterance);
     },
-    [supported, voices]
+    [supported, stop]
   );
 
   return { speak, speaking, speakingId, supported, stop };

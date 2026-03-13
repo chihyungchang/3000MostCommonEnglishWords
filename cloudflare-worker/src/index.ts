@@ -1,293 +1,167 @@
 /**
  * Vocabulary AI Worker
- * Provides TTS pronunciation and AI word analysis via Cloudflare Workers AI
+ * Provides TTS pronunciation and AI chat via Cloudflare Workers AI
  */
 
 export interface Env {
   AI: Ai;
 }
 
-// CORS headers for frontend access
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
 };
 
-// Handle CORS preflight
+const langMap: Record<string, string> = {
+  zh: "中文",
+  en: "English",
+  ja: "日本語",
+  ko: "한국어",
+  es: "Español",
+  de: "Deutsch",
+  pt: "Português",
+  ru: "Русский",
+  ar: "العربية",
+  ms: "Bahasa Melayu",
+};
+
 function handleOptions(): Response {
   return new Response(null, { headers: corsHeaders });
 }
 
-// Text-to-Speech endpoint
+function jsonResponse(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+// 从 AI 响应中提取内容
+function extractContent(aiResponse: unknown): string {
+  if (typeof aiResponse === "string") return aiResponse;
+
+  if (aiResponse && typeof aiResponse === "object") {
+    const resp = aiResponse as Record<string, unknown>;
+
+    if (Array.isArray(resp.choices) && resp.choices.length > 0) {
+      const choice = resp.choices[0] as Record<string, unknown>;
+      const message = choice.message as Record<string, unknown> | undefined;
+
+      if (message) {
+        // 优先使用 content
+        if (typeof message.content === "string" && message.content) {
+          return message.content;
+        }
+        // 如果 content 为空，使用 reasoning_content
+        if (
+          typeof message.reasoning_content === "string" &&
+          message.reasoning_content
+        ) {
+          return message.reasoning_content;
+        }
+        if (typeof message.reasoning === "string" && message.reasoning) {
+          return message.reasoning;
+        }
+      }
+    }
+
+    if (typeof resp.response === "string") return resp.response;
+  }
+
+  return "";
+}
+
 async function handleTTS(request: Request, env: Env): Promise<Response> {
   try {
-    const { text, lang = 'en' } = await request.json() as { text: string; lang?: string };
+    const { text, lang = "en" } = (await request.json()) as {
+      text: string;
+      lang?: string;
+    };
 
     if (!text) {
-      return new Response(JSON.stringify({ error: 'Text is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonResponse({ error: "Text is required" }, 400);
     }
 
-    const response = await env.AI.run('@cf/myshell-ai/melotts', {
+    const response = (await env.AI.run("@cf/myshell-ai/melotts", {
       prompt: text,
       lang: lang,
-    }) as { audio: string };
+    })) as { audio: string };
 
-    // Return audio as base64
-    return new Response(JSON.stringify({ audio: response.audio }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ audio: response.audio });
   } catch (error) {
-    console.error('TTS Error:', error);
-    return new Response(JSON.stringify({ error: 'TTS generation failed' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error("TTS Error:", error);
+    return jsonResponse({ error: "TTS generation failed" }, 500);
   }
 }
 
-// AI Word Analysis endpoint
-async function handleAnalysis(request: Request, env: Env): Promise<Response> {
-  try {
-    const { word, definition, example, targetLang = 'zh' } = await request.json() as {
-      word: string;
-      definition: string;
-      example?: string;
-      targetLang?: string;
-    };
-
-    if (!word) {
-      return new Response(JSON.stringify({ error: 'Word is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const langMap: Record<string, string> = {
-      zh: '中文',
-      en: 'English',
-      ja: '日本語',
-      ko: '한국어',
-      es: 'Español',
-      de: 'Deutsch',
-      pt: 'Português',
-      ru: 'Русский',
-      ar: 'العربية',
-      ms: 'Bahasa Melayu',
-    };
-
-    const outputLang = langMap[targetLang] || '中文';
-
-    const systemPrompt = `你是英语词汇专家。直接输出JSON，不要解释。用${outputLang}回答。`;
-
-    const userPrompt = `分析单词 "${word}" (${definition})，直接返回JSON:
-{"etymology":"词源(简短)","memory_tip":"记忆技巧","synonyms":["近义词"],"antonyms":["反义词"],"collocations":["常见搭配"],"example_sentences":["例句"],"usage_notes":"用法注意"}`;
-
-    const aiResponse = await env.AI.run('@cf/zai-org/glm-4.7-flash' as any, {
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      max_tokens: 2048,
-      temperature: 0.7,
-    });
-
-    // Handle OpenAI-compatible response format
-    let responseText = '';
-    if (typeof aiResponse === 'string') {
-      responseText = aiResponse;
-    } else if (aiResponse && typeof aiResponse === 'object') {
-      const resp = aiResponse as any;
-      // OpenAI format: choices[0].message.content or reasoning_content
-      if (resp.choices && resp.choices[0]?.message) {
-        const msg = resp.choices[0].message;
-        responseText = msg.content || msg.reasoning_content || msg.reasoning || '';
-      } else {
-        // Fallback to other formats
-        responseText = resp.response || resp.result?.response || resp.generated_text || resp.text || '';
-      }
-    }
-
-    // Try to parse the JSON response
-    let analysis;
-    try {
-      // Extract JSON from the response (it might be wrapped in markdown code blocks)
-      const jsonMatch = responseText.match(/\{[\s\S]*?\}(?=\s*$|\s*```|\s*\n\n)/);
-      if (jsonMatch) {
-        analysis = JSON.parse(jsonMatch[0]);
-      } else {
-        // Try to find the last complete JSON object
-        const allJsonMatches = responseText.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g);
-        if (allJsonMatches && allJsonMatches.length > 0) {
-          // Try parsing from the last match backwards
-          for (let i = allJsonMatches.length - 1; i >= 0; i--) {
-            try {
-              analysis = JSON.parse(allJsonMatches[i]);
-              break;
-            } catch {
-              continue;
-            }
-          }
-        }
-        if (!analysis) {
-          analysis = { raw: responseText };
-        }
-      }
-    } catch {
-      analysis = { raw: responseText };
-    }
-
-    return new Response(JSON.stringify({ analysis }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
-    console.error('Analysis Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Analysis failed';
-    return new Response(JSON.stringify({ error: errorMessage, details: String(error) }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-}
-
-// AI Chat endpoint
 async function handleChat(request: Request, env: Env): Promise<Response> {
   try {
-    const { message, context, targetLang = 'zh' } = await request.json() as {
+    const {
+      message,
+      context,
+      targetLang = "zh",
+    } = (await request.json()) as {
       message: string;
       context: string;
       targetLang?: string;
     };
 
     if (!message) {
-      return new Response(JSON.stringify({ error: 'Message is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonResponse({ error: "Message is required" }, 400);
     }
 
-    const langMap: Record<string, string> = {
-      zh: '中文',
-      en: 'English',
-      ja: '日本語',
-      ko: '한국어',
-      es: 'Español',
-      de: 'Deutsch',
-      pt: 'Português',
-      ru: 'Русский',
-      ar: 'العربية',
-      ms: 'Bahasa Melayu',
-    };
+    const outputLang = langMap[targetLang] || "中文";
+    const word = context.split("\n")[0]?.replace("当前学习的单词: ", "") || "";
 
-    const outputLang = langMap[targetLang] || '中文';
+    // 判断是否是要求造句
+    const needsEnglish = /sentence|例句|造句|造个句/.test(message);
 
-    const systemPrompt = `You are a vocabulary tutor. Answer in ${outputLang}. Be concise (under 50 words). No markdown.`;
+    const systemPrompt = needsEnglish
+      ? `You are an English tutor. Output ONLY an English sentence using the word. Nothing else.`
+      : `You are an English vocabulary tutor. Answer in ${outputLang}. Direct answer only, max 30 words.`;
 
-    const userPrompt = `Word: "${context.split('\n')[0]?.replace('当前学习的单词: ', '') || ''}"
-User question: ${message}
-
-Give a direct, helpful answer in ${outputLang}:`;
-
-    const aiResponse = await env.AI.run('@cf/zai-org/glm-4.7-flash' as any, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const aiResponse = await env.AI.run("@cf/zai-org/glm-4.7-flash" as any, {
       messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Word: "${word}". ${message}` },
       ],
-      max_completion_tokens: 200,
-      temperature: 0.7,
+      max_tokens: 512,
+      temperature: 0.3,
     });
 
-    // Debug: log the response structure
-    console.log('AI Response:', JSON.stringify(aiResponse));
+    const responseText = extractContent(aiResponse);
 
-    // Handle response - Cloudflare Workers AI returns OpenAI-compatible format
-    let responseText = '';
-    if (typeof aiResponse === 'string') {
-      responseText = aiResponse;
-    } else if (aiResponse && typeof aiResponse === 'object') {
-      const resp = aiResponse as any;
-      // Standard OpenAI format: choices[0].message.content
-      if (resp.choices && Array.isArray(resp.choices) && resp.choices.length > 0) {
-        const choice = resp.choices[0];
-        if (choice.message) {
-          responseText = choice.message.content || '';
-        } else if (choice.text) {
-          responseText = choice.text;
-        }
-      }
-      // Fallback for other response formats
-      if (!responseText) {
-        responseText = resp.response || resp.result || resp.generated_text || resp.text || '';
-        if (typeof responseText === 'object') {
-          responseText = JSON.stringify(responseText);
-        }
-      }
-    }
-
-    // If still empty, return error info
-    if (!responseText) {
-      console.error('Empty response. Full response:', JSON.stringify(aiResponse));
-      responseText = 'AI 暂时无法回答，请稍后再试。';
-    }
-
-    // Clean up response
-    responseText = responseText
-      .replace(/^\s*\d+\.\s*/gm, '')
-      .replace(/^\s*[\*\-]\s*/gm, '')
-      .replace(/\*\*/g, '')
-      .replace(/\*/g, '')
-      .replace(/#{1,6}\s*/g, '')
-      .trim();
-
-    return new Response(JSON.stringify({ reply: responseText }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    return jsonResponse({
+      reply: responseText || "暂时无法回答",
     });
   } catch (error) {
-    console.error('Chat Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Chat failed';
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error("Chat Error:", error);
+    const msg = error instanceof Error ? error.message : String(error);
+    return jsonResponse({ error: msg }, 500);
   }
 }
 
-// Main request handler
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
-    // Handle CORS preflight
-    if (request.method === 'OPTIONS') {
+    if (request.method === "OPTIONS") {
       return handleOptions();
     }
 
-    // Route requests
-    if (url.pathname === '/tts' && request.method === 'POST') {
-      return handleTTS(request, env);
+    switch (url.pathname) {
+      case "/tts":
+        if (request.method === "POST") return handleTTS(request, env);
+        break;
+      case "/chat":
+        if (request.method === "POST") return handleChat(request, env);
+        break;
+      case "/health":
+        return jsonResponse({ status: "ok", timestamp: Date.now() });
     }
 
-    if (url.pathname === '/analyze' && request.method === 'POST') {
-      return handleAnalysis(request, env);
-    }
-
-    if (url.pathname === '/chat' && request.method === 'POST') {
-      return handleChat(request, env);
-    }
-
-    // Health check
-    if (url.pathname === '/health') {
-      return new Response(JSON.stringify({ status: 'ok', timestamp: Date.now() }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    return new Response(JSON.stringify({ error: 'Not found' }), {
-      status: 404,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: "Not found" }, 404);
   },
 };

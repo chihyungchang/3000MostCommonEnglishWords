@@ -1,44 +1,21 @@
 /**
  * AI Service - Cloudflare Workers AI integration
- * Provides TTS pronunciation and AI word analysis
+ * Provides TTS pronunciation and AI chat
  */
 
-// Worker API URL - will be replaced with actual deployed URL
 const WORKER_URL = import.meta.env.VITE_AI_WORKER_URL || '';
 
-export interface WordAnalysis {
-  etymology?: string;
-  memory_tip?: string;
-  synonyms?: string[];
-  antonyms?: string[];
-  collocations?: string[];
-  example_sentences?: string[];
-  usage_notes?: string;
-  raw?: string;
-}
-
-export interface TTSResponse {
-  audio: string; // base64 encoded audio
-}
-
-export interface AnalysisResponse {
-  analysis: WordAnalysis;
+interface TTSResponse {
+  audio: string;
 }
 
 class AIService {
   private audioCache: Map<string, string> = new Map();
-  private analysisCache: Map<string, WordAnalysis> = new Map();
 
-  /**
-   * Check if AI service is configured
-   */
   isConfigured(): boolean {
     return !!WORKER_URL;
   }
 
-  /**
-   * Generate pronunciation audio for text
-   */
   async pronounce(text: string, lang: string = 'en'): Promise<string | null> {
     if (!this.isConfigured()) {
       console.warn('AI Worker URL not configured');
@@ -70,9 +47,6 @@ class AIService {
     }
   }
 
-  /**
-   * Play pronunciation audio
-   */
   async playPronunciation(text: string, lang: string = 'en'): Promise<boolean> {
     const audioBase64 = await this.pronounce(text, lang);
     if (!audioBase64) return false;
@@ -87,55 +61,7 @@ class AIService {
     }
   }
 
-  /**
-   * Get AI analysis for a word
-   */
-  async analyzeWord(
-    word: string,
-    definition: string,
-    example?: string,
-    targetLang: string = 'zh'
-  ): Promise<WordAnalysis | null> {
-    if (!this.isConfigured()) {
-      console.warn('AI Worker URL not configured');
-      return null;
-    }
-
-    const cacheKey = `${word}_${targetLang}`;
-    if (this.analysisCache.has(cacheKey)) {
-      return this.analysisCache.get(cacheKey)!;
-    }
-
-    try {
-      const response = await fetch(`${WORKER_URL}/analyze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ word, definition, example, targetLang }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        const errorMsg = data.error || data.details || `Analysis request failed: ${response.status}`;
-        throw new Error(errorMsg);
-      }
-
-      this.analysisCache.set(cacheKey, data.analysis);
-      return data.analysis;
-    } catch (error) {
-      console.error('Analysis Error:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Send a chat message about a word
-   */
-  async chat(
-    message: string,
-    context: string,
-    targetLang: string = 'zh'
-  ): Promise<string> {
+  async chat(message: string, context: string, targetLang: string = 'zh'): Promise<string> {
     if (!this.isConfigured()) {
       throw new Error('AI service not configured');
     }
@@ -160,12 +86,8 @@ class AIService {
     }
   }
 
-  /**
-   * Clear caches
-   */
   clearCache(): void {
     this.audioCache.clear();
-    this.analysisCache.clear();
   }
 }
 
