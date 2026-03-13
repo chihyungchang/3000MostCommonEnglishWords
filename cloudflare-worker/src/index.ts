@@ -231,13 +231,10 @@ async function handleLookup(
     // 2. Call AI to generate definition
     const outputLang = langMap[targetLang] || "中文";
 
-    const systemPrompt = `You are a JSON dictionary. Define EXACTLY the word "${word}". Rules:
-1. "definition" MUST be in ${outputLang}
-2. "example" MUST be in English (a simple sentence using this word)
-3. Output ONLY valid JSON, no explanation
-Format: {"phonetic":"/IPA/","pos":["n"/"v"/"adj"/"adv"/"prep"/"conj"/"pron"/"det"],"definition":"${outputLang} meaning","example":"English sentence","isPhrase":false}`;
+    const systemPrompt = `Output JSON only. No explanation. No markdown.`;
 
-    const userPrompt = `Define "${word}"`;
+    const userPrompt = `Word: "${word}"
+Return: {"phonetic":"/IPA/","pos":["n" or "v" or "adj" or "adv" or "prep" or "conj" or "pron"],"definition":"${outputLang}释义","example":"English example sentence","isPhrase":false}`;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const aiResponse = await env.AI.run("@cf/zai-org/glm-4.7-flash" as any, {
