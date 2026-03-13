@@ -231,7 +231,11 @@ async function handleLookup(
     // 2. Call AI to generate definition
     const outputLang = langMap[targetLang] || "中文";
 
-    const systemPrompt = `You are a JSON dictionary. Define EXACTLY the word given, not related words. Output in ${outputLang}. Format: {"phonetic":"/IPA/","pos":["prep"/"n"/"v"/"adj"/"adv"/"conj"/"det"/"pron"],"definition":"meaning","example":"sentence using this exact word","isPhrase":false}. Output ONLY JSON.`;
+    const systemPrompt = `You are a JSON dictionary. Define EXACTLY the word "${word}". Rules:
+1. "definition" MUST be in ${outputLang}
+2. "example" MUST be in English (a simple sentence using this word)
+3. Output ONLY valid JSON, no explanation
+Format: {"phonetic":"/IPA/","pos":["n"/"v"/"adj"/"adv"/"prep"/"conj"/"pron"/"det"],"definition":"${outputLang} meaning","example":"English sentence","isPhrase":false}`;
 
     const userPrompt = `Define "${word}"`;
 
