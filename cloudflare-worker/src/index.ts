@@ -349,18 +349,17 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
     const needsEnglish = /sentence|例句|造句|造个句/.test(message);
 
     const systemPrompt = needsEnglish
-      ? `You are an English tutor. Output ONLY an English sentence using the word. Nothing else.`
-      : `You are an English vocabulary tutor. Answer in ${outputLang}. Direct answer only, max 30 words.`;
+      ? `Output ONLY one English sentence using the word "${word}".`
+      : `English tutor. Answer in ${outputLang}. Max 30 words.`;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const aiResponse = await env.AI.run("@cf/zai-org/glm-4.7-flash" as any, {
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: `Word: "${word}". ${message}` },
+        { role: "user", content: message },
       ],
-      stream: false,
-      max_tokens: 512,
-      temperature: 0.3,
+      max_tokens: 128,
+      temperature: 0.5,
     });
 
     const responseText = extractContent(aiResponse);
