@@ -32,6 +32,20 @@ const langMap: Record<string, string> = {
   ms: "Bahasa Melayu",
 };
 
+// m2m100 translation model language codes
+const m2mLangCode: Record<string, string> = {
+  zh: "zh",
+  en: "en",
+  ja: "ja",
+  ko: "ko",
+  es: "es",
+  de: "de",
+  pt: "pt",
+  ru: "ru",
+  ar: "ar",
+  ms: "ms",
+};
+
 function handleOptions(): Response {
   return new Response(null, { headers: corsHeaders });
 }
@@ -233,41 +247,40 @@ async function handleLookup(
       }
     }
 
-    // 2. Call AI to generate definition
-    const outputLang = langMap[targetLang] || "中文";
-
+    // 2. Call AI to generate phonetic, pos, example (definition from translation model)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const aiResponse = await env.AI.run("@cf/meta/llama-3.2-3b-instruct", {
       messages: [
         {
           role: "system",
-          content:
-            "You are a dictionary API. Always return valid JSON only. No explanation.",
+          content: "You are a dictionary API that returns strict JSON.",
         },
         {
           role: "user",
-          content: `Define the English word "${word}".
-
-Return ONLY valid JSON with this exact schema:
+          content: `For the English word "${word}", return JSON:
 
 {
-  "phonetic": "/fəˈnɛtɪk/",
-  "pos": ["noun"],
-  "definition": "${outputLang} meaning",
-  "example": "Example English sentence using the word.",
+  "phonetic": "/.../",
+  "pos": ["..."],
+  "example": "...",
   "cached": false
 }
 
+Return JSON with these fields:
+
+- phonetic: IPA pronunciation of the word
+- pos: array of part of speech (e.g. noun, verb, adjective, adverb, preposition)
+- example: an English sentence using the word "${word}"
+- cached: always false
+
 Rules:
-- phonetic: IPA pronunciation
-- pos: part of speech (noun, verb, adjective, adverb, preposition, etc.)
-- definition: translate the meaning into ${outputLang}
-- example: simple natural English sentence
-- cached must always be false
-- Output JSON only. No markdown. No explanation.`,
+- phonetic must be the correct IPA for "${word}"
+- pos must match the actual part of speech of "${word}"
+- example must contain the word "${word}"
+- output JSON only`,
         },
       ],
-      max_tokens: 120,
+      max_tokens: 80,
       temperature: 0.1,
     });
 
@@ -292,8 +305,8 @@ Rules:
             const result = JSON.parse(jsonMatches[i]);
             if (
               result.phonetic !== undefined ||
-              result.definition !== undefined ||
-              result.pos !== undefined
+              result.pos !== undefined ||
+              result.example !== undefined
             ) {
               parsed = result;
               break;
@@ -308,9 +321,24 @@ Rules:
     }
 
     if (!parsed) {
-      parsed = {
-        definition: responseText.slice(0, 200),
-      };
+      parsed = {};
+    }
+
+    // 3.5 Translate word using dedicated translation model
+    const targetCode = m2mLangCode[targetLang] || "zh";
+    try {
+      const translationResponse = (await env.AI.run("@cf/meta/m2m100-1.2b", {
+        text: normalizedWord,
+        source_lang: "en",
+        target_lang: targetCode,
+      })) as { translated_text?: string };
+
+      if (translationResponse.translated_text) {
+        parsed.definition = translationResponse.translated_text;
+      }
+    } catch (err) {
+      console.error("Translation error:", err);
+      parsed.definition = normalizedWord; // Fallback to original word
     }
 
     // 4. Store in Supabase cache using waitUntil

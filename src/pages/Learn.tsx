@@ -168,7 +168,9 @@ export function Learn() {
       } else {
         // Create new session
         const wordIds = words.map((w) => w.id);
-        const newWords = getNewWords(wordIds, stats.dailyGoal);
+        // Calculate remaining new words for today (consider already learned today)
+        const remainingNewWords = Math.max(0, stats.dailyGoal - stats.todayLearned);
+        const newWords = remainingNewWords > 0 ? getNewWords(wordIds, remainingNewWords) : [];
         // Limit review words to be proportional to daily goal (max 1:1 ratio)
         const reviewLimit = Math.max(stats.dailyGoal, 10);
         const dueWords = getWordsToReview(reviewLimit);
@@ -195,7 +197,7 @@ export function Learn() {
         });
       }
     }
-  }, [wordsLoaded, progressLoaded, settingsLoaded, userLoaded, words, stats.dailyGoal, settings.learnOrder, getNewWords, getWordsToReview, startLearning, session.sessionComplete]);
+  }, [wordsLoaded, progressLoaded, settingsLoaded, userLoaded, words, stats.dailyGoal, stats.todayLearned, settings.learnOrder, getNewWords, getWordsToReview, startLearning, session.sessionComplete]);
 
   // Save session whenever relevant state changes
   useEffect(() => {
