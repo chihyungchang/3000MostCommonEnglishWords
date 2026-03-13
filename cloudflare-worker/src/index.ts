@@ -237,15 +237,16 @@ async function handleLookup(
     const outputLang = langMap[targetLang] || "中文";
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const aiResponse = await env.AI.run("@cf/meta/llama-3.2-1b-instruct" as any, {
+    const aiResponse = await env.AI.run("@cf/meta/llama-3.2-3b-instruct" as any, {
       messages: [
         {
           role: "user",
-          content: `Define "${word}" in JSON: {"phonetic":"/IPA/","pos":["n"/"v"/"adj"/"adv"/"prep"],"definition":"${outputLang}释义","example":"English sentence"}`,
+          content: `Word: ${word}
+Output JSON only: {"phonetic":"IPA pronunciation","pos":["part of speech"],"definition":"meaning in ${outputLang}","example":"example sentence in English"}`,
         },
       ],
       max_tokens: 150,
-      temperature: 0.1,
+      temperature: 0.2,
     });
 
     const responseText = extractContent(aiResponse);
