@@ -241,8 +241,7 @@ async function handleLookup(
       messages: [
         {
           role: "user",
-          content: `Word: ${word}
-Output JSON only: {"phonetic":"IPA pronunciation","pos":["part of speech"],"definition":"meaning in ${outputLang}","example":"example sentence in English"}`,
+          content: `Define English word "${word}". Reply JSON: {"phonetic":"/IPA/","pos":["n"or"v"or"adj"or"adv"],"definition":"${outputLang}","example":"He/She/They..."}`,
         },
       ],
       max_tokens: 150,
