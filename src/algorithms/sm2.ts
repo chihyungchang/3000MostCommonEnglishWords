@@ -26,7 +26,8 @@ export function calculateNextReview(
   quality: ResponseQuality
 ): Partial<WordProgress> {
   const score = qualityScore[quality];
-  let { interval, easeFactor, consecutiveCorrect, reviewCount } = progress;
+  let { interval, easeFactor, consecutiveCorrect } = progress;
+  const { reviewCount } = progress;
 
   // Update ease factor based on response
   easeFactor = easeFactor + (0.1 - (5 - score) * (0.08 + (5 - score) * 0.02));
@@ -122,6 +123,8 @@ export function getWordsToReview(
 
 /**
  * Get new words that haven't been learned yet
+ * Also includes words that are in 'learning' status but haven't been reviewed yet
+ * (started but not completed first learning session)
  */
 export function getNewWords(
   allWordIds: string[],
@@ -129,15 +132,25 @@ export function getNewWords(
   limit: number = 20
 ): string[] {
   const newWords: string[] = [];
+  const learningWords: string[] = [];
 
   for (const wordId of allWordIds) {
-    if (!progressMap.has(wordId)) {
+    const progress = progressMap.get(wordId);
+    if (!progress) {
+      // Completely new word
       newWords.push(wordId);
-      if (newWords.length >= limit) break;
+    } else if (progress.status === 'learning' && progress.reviewCount === 0) {
+      // Started but not completed first learning (prioritize these)
+      learningWords.push(wordId);
     }
+
+    // Stop early if we have enough
+    if (learningWords.length + newWords.length >= limit) break;
   }
 
-  return newWords;
+  // Return learning words first (to continue where user left off), then new words
+  const result = [...learningWords, ...newWords].slice(0, limit);
+  return result;
 }
 
 /**

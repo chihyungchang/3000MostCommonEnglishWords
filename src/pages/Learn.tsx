@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Trophy, Sparkles, Target, CheckCircle2, XCircle, Keyboard } from 'lucide-react';
@@ -9,9 +9,28 @@ import { useUserStore } from '../stores/userStore';
 import { useSettingsStore } from '../stores/themeStore';
 import { useDevice } from '../hooks/useDevice';
 import { calculateXP } from '../algorithms/sm2';
+import { getItem, setItem, removeItem, getTodayString } from '../utils/storage';
 import type { ResponseQuality } from '../types';
 
 type LearningPhase = 'new' | 'review';
+
+// Session storage key
+const SESSION_KEY = 'learn_session';
+
+interface LearnSession {
+  date: string;
+  studyWords: string[];
+  reviewWords: string[];
+  currentPhase: LearningPhase;
+  currentIndex: number;
+  sessionStats: {
+    newLearned: number;
+    reviewed: number;
+    correct: number;
+    wrong: number;
+    xpEarned: number;
+  };
+}
 
 export function Learn() {
   const navigate = useNavigate();
@@ -39,20 +58,62 @@ export function Learn() {
   } = useUserStore();
   const { settings, isLoaded: settingsLoaded, loadSettings } = useSettingsStore();
 
-  // Local state
-  const [currentPhase, setCurrentPhase] = useState<LearningPhase>('new');
-  const [studyWords, setStudyWords] = useState<string[]>([]);
-  const [reviewWords, setReviewWords] = useState<string[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [sessionComplete, setSessionComplete] = useState(false);
-  const [sessionStats, setSessionStats] = useState({
-    newLearned: 0,
-    reviewed: 0,
-    correct: 0,
-    wrong: 0,
-    xpEarned: 0,
+  // Session state - combined into single object to avoid multiple setState calls
+  interface SessionState {
+    studyWords: string[];
+    reviewWords: string[];
+    currentPhase: LearningPhase;
+    currentIndex: number;
+    sessionStats: {
+      newLearned: number;
+      reviewed: number;
+      correct: number;
+      wrong: number;
+      xpEarned: number;
+    };
+    initialized: boolean;
+    sessionComplete: boolean;
+  }
+
+  const [session, setSession] = useState<SessionState>({
+    studyWords: [],
+    reviewWords: [],
+    currentPhase: 'new',
+    currentIndex: 0,
+    sessionStats: { newLearned: 0, reviewed: 0, correct: 0, wrong: 0, xpEarned: 0 },
+    initialized: false,
+    sessionComplete: false,
   });
+
+  const [showAnswer, setShowAnswer] = useState(false);
+  const sessionSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initRef = useRef(false);
+
+  // Destructure for easier access
+  const { studyWords, reviewWords, currentPhase, currentIndex, sessionStats, initialized, sessionComplete } = session;
+
+  // Save session to localStorage (debounced)
+  const saveSession = useCallback(() => {
+    if (sessionSaveTimeoutRef.current) {
+      clearTimeout(sessionSaveTimeoutRef.current);
+    }
+    sessionSaveTimeoutRef.current = setTimeout(() => {
+      const sessionData: LearnSession = {
+        date: getTodayString(),
+        studyWords: session.studyWords,
+        reviewWords: session.reviewWords,
+        currentPhase: session.currentPhase,
+        currentIndex: session.currentIndex,
+        sessionStats: session.sessionStats,
+      };
+      setItem(SESSION_KEY, sessionData);
+    }, 100);
+  }, [session]);
+
+  // Clear session when complete
+  const clearSession = useCallback(() => {
+    removeItem(SESSION_KEY);
+  }, []);
 
   // Load data on mount
   useEffect(() => {
@@ -62,37 +123,72 @@ export function Learn() {
     if (!settingsLoaded) loadSettings();
   }, [wordsLoaded, progressLoaded, userLoaded, settingsLoaded, loadWords, loadProgress, loadUser, loadSettings]);
 
-  // Initialize learning session based on settings
-  const [initialized, setInitialized] = useState(false);
-
+  // Initialize learning session - try to restore from saved session first
   useEffect(() => {
-    if (wordsLoaded && progressLoaded && settingsLoaded && !initialized && !sessionComplete) {
-      const wordIds = words.map((w) => w.id);
-      const newWords = getNewWords(wordIds, stats.dailyGoal);
-      const dueWords = getWordsToReview(50);
+    if (wordsLoaded && progressLoaded && settingsLoaded && userLoaded && !initRef.current && !session.sessionComplete) {
+      initRef.current = true;
+      const today = getTodayString();
+      const savedSession = getItem<LearnSession | null>(SESSION_KEY, null);
 
-      // Mark new words as learning
-      newWords.forEach((id) => startLearning(id));
+      // Check if we have a valid saved session from today
+      if (savedSession && savedSession.date === today && savedSession.studyWords.length + savedSession.reviewWords.length > 0) {
+        // Restore saved session using single setState
+        // This is intentional initialization from localStorage, not a cascading render
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSession({
+          studyWords: savedSession.studyWords,
+          reviewWords: savedSession.reviewWords,
+          currentPhase: savedSession.currentPhase,
+          currentIndex: savedSession.currentIndex,
+          sessionStats: savedSession.sessionStats,
+          initialized: true,
+          sessionComplete: false,
+        });
+      } else {
+        // Create new session
+        const wordIds = words.map((w) => w.id);
+        const newWords = getNewWords(wordIds, stats.dailyGoal);
+        const dueWords = getWordsToReview(50);
 
-      // Batch state updates
-      const updates = () => {
-        setStudyWords(newWords);
-        setReviewWords(dueWords);
-        setInitialized(true);
+        // Mark new words as learning (only those not already marked)
+        newWords.forEach((id) => startLearning(id));
 
         // Set initial phase based on settings
+        let initialPhase: LearningPhase = 'new';
         if (settings.learnOrder === 'review-first' && dueWords.length > 0) {
-          setCurrentPhase('review');
-        } else if (newWords.length > 0) {
-          setCurrentPhase('new');
-        } else if (dueWords.length > 0) {
-          setCurrentPhase('review');
+          initialPhase = 'review';
+        } else if (newWords.length === 0 && dueWords.length > 0) {
+          initialPhase = 'review';
         }
-      };
 
-      updates();
+        setSession({
+          studyWords: newWords,
+          reviewWords: dueWords,
+          currentPhase: initialPhase,
+          currentIndex: 0,
+          sessionStats: { newLearned: 0, reviewed: 0, correct: 0, wrong: 0, xpEarned: 0 },
+          initialized: true,
+          sessionComplete: false,
+        });
+      }
     }
-  }, [wordsLoaded, progressLoaded, settingsLoaded, words, stats.dailyGoal, settings.learnOrder, getNewWords, getWordsToReview, startLearning, initialized, sessionComplete]);
+  }, [wordsLoaded, progressLoaded, settingsLoaded, userLoaded, words, stats.dailyGoal, settings.learnOrder, getNewWords, getWordsToReview, startLearning, session.sessionComplete]);
+
+  // Save session whenever relevant state changes
+  useEffect(() => {
+    if (initialized && !sessionComplete && (studyWords.length > 0 || reviewWords.length > 0)) {
+      saveSession();
+    }
+  }, [initialized, sessionComplete, studyWords, reviewWords, currentPhase, currentIndex, sessionStats, saveSession]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (sessionSaveTimeoutRef.current) {
+        clearTimeout(sessionSaveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Get current word list and word
   const currentWordList = currentPhase === 'new' ? studyWords : reviewWords;
@@ -113,45 +209,50 @@ export function Learn() {
 
       if (currentPhase === 'new') {
         recordLearn();
-        setSessionStats((prev) => ({
+        setSession((prev) => ({
           ...prev,
-          newLearned: prev.newLearned + 1,
-          xpEarned: prev.xpEarned + xp,
+          sessionStats: {
+            ...prev.sessionStats,
+            newLearned: prev.sessionStats.newLearned + 1,
+            xpEarned: prev.sessionStats.xpEarned + xp,
+          },
         }));
       } else {
         recordReview();
         if (quality === 'easy') {
           recordMastered();
         }
-        setSessionStats((prev) => ({
+        setSession((prev) => ({
           ...prev,
-          reviewed: prev.reviewed + 1,
-          correct: prev.correct + (quality !== 'forgot' ? 1 : 0),
-          wrong: prev.wrong + (quality === 'forgot' ? 1 : 0),
-          xpEarned: prev.xpEarned + xp,
+          sessionStats: {
+            ...prev.sessionStats,
+            reviewed: prev.sessionStats.reviewed + 1,
+            correct: prev.sessionStats.correct + (quality !== 'forgot' ? 1 : 0),
+            wrong: prev.sessionStats.wrong + (quality === 'forgot' ? 1 : 0),
+            xpEarned: prev.sessionStats.xpEarned + xp,
+          },
         }));
       }
 
       // Move to next word
       if (currentIndex < currentWordList.length - 1) {
-        setCurrentIndex(currentIndex + 1);
+        setSession((prev) => ({ ...prev, currentIndex: prev.currentIndex + 1 }));
         setShowAnswer(false);
       } else {
         // Current phase complete, switch to next phase or finish
         if (currentPhase === 'new' && reviewWords.length > 0) {
-          setCurrentPhase('review');
-          setCurrentIndex(0);
+          setSession((prev) => ({ ...prev, currentPhase: 'review', currentIndex: 0 }));
           setShowAnswer(false);
         } else if (currentPhase === 'review' && settings.learnOrder === 'review-first' && studyWords.length > 0) {
-          setCurrentPhase('new');
-          setCurrentIndex(0);
+          setSession((prev) => ({ ...prev, currentPhase: 'new', currentIndex: 0 }));
           setShowAnswer(false);
         } else {
-          setSessionComplete(true);
+          setSession((prev) => ({ ...prev, sessionComplete: true }));
+          clearSession();
         }
       }
     },
-    [currentWordId, currentIndex, currentWordList.length, currentPhase, reviewWords.length, studyWords.length, settings.learnOrder, updateProgress, addXP, recordLearn, recordReview, recordMastered]
+    [currentWordId, currentIndex, currentWordList.length, currentPhase, reviewWords.length, studyWords.length, settings.learnOrder, updateProgress, addXP, recordLearn, recordReview, recordMastered, clearSession]
   );
 
   // Keyboard shortcuts
@@ -243,12 +344,17 @@ export function Learn() {
           <div className="flex gap-3">
             <button
               onClick={() => {
-                setStudyWords([]);
-                setReviewWords([]);
-                setCurrentIndex(0);
-                setSessionComplete(false);
-                setSessionStats({ newLearned: 0, reviewed: 0, correct: 0, wrong: 0, xpEarned: 0 });
-                setInitialized(false);
+                clearSession();
+                initRef.current = false;
+                setSession({
+                  studyWords: [],
+                  reviewWords: [],
+                  currentPhase: 'new',
+                  currentIndex: 0,
+                  sessionStats: { newLearned: 0, reviewed: 0, correct: 0, wrong: 0, xpEarned: 0 },
+                  initialized: false,
+                  sessionComplete: false,
+                });
               }}
               className="flex-1 clay-btn py-3 font-semibold"
             >
