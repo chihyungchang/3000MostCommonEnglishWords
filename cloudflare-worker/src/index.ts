@@ -184,22 +184,19 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
 
     const outputLang = langMap[targetLang] || '中文';
 
-    const systemPrompt = `你是英语词汇助手。用${outputLang}简洁回答，不超过80字。
-规则：
-1. 直接回答，不要分析问题
-2. 不使用*、#等markdown符号
-3. 不要列表，用短句
-4. 语气友好自然`;
+    const systemPrompt = `You are a vocabulary tutor. Reply in ${outputLang} only. Keep answer under 60 words. Be direct and friendly. No markdown symbols like * or #. No bullet points.`;
 
-    const userPrompt = `${context}\n\n用户问题: ${message}`;
+    const userPrompt = `Word: ${context.split('\n')[0]?.replace('当前学习的单词: ', '') || 'unknown'}
+Question: ${message}
+Answer in ${outputLang}:`;
 
     const aiResponse = await env.AI.run('@cf/zai-org/glm-4.7-flash' as any, {
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
-      max_tokens: 512,
-      temperature: 0.8,
+      max_tokens: 256,
+      temperature: 0.7,
     });
 
     // Handle OpenAI-compatible response format
@@ -210,11 +207,23 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
       const resp = aiResponse as any;
       if (resp.choices && resp.choices[0]?.message) {
         const msg = resp.choices[0].message;
-        responseText = msg.content || msg.reasoning_content || msg.reasoning || '';
+        // Try content first, then reasoning_content
+        responseText = msg.content || '';
+        if (!responseText && msg.reasoning_content) {
+          responseText = msg.reasoning_content;
+        }
       } else {
         responseText = resp.response || resp.result?.response || resp.generated_text || resp.text || '';
       }
     }
+
+    // Clean up response - remove markdown symbols
+    responseText = responseText
+      .replace(/^\s*[\*\-]\s*/gm, '')
+      .replace(/\*\*/g, '')
+      .replace(/\*/g, '')
+      .replace(/#{1,6}\s*/g, '')
+      .trim();
 
     return new Response(JSON.stringify({ reply: responseText }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
