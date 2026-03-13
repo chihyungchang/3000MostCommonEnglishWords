@@ -184,39 +184,56 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
 
     const outputLang = langMap[targetLang] || '中文';
 
-    const systemPrompt = `You are a vocabulary tutor. Reply in ${outputLang} only. Keep answer under 60 words. Be direct and friendly. No markdown symbols like * or #. No bullet points.`;
+    const systemPrompt = `You are a vocabulary tutor. Answer in ${outputLang}. Be concise (under 50 words). No markdown.`;
 
-    const userPrompt = `Word: ${context.split('\n')[0]?.replace('当前学习的单词: ', '') || 'unknown'}
-Question: ${message}
-Answer in ${outputLang}:`;
+    const userPrompt = `Word: "${context.split('\n')[0]?.replace('当前学习的单词: ', '') || ''}"
+User question: ${message}
+
+Give a direct, helpful answer in ${outputLang}:`;
 
     const aiResponse = await env.AI.run('@cf/zai-org/glm-4.7-flash' as any, {
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
-      max_tokens: 256,
+      max_completion_tokens: 200,
       temperature: 0.7,
-      // Disable thinking/reasoning mode to get direct answer
-      thinking: { type: 'disabled' },
     });
 
-    // Handle OpenAI-compatible response format
+    // Debug: log the response structure
+    console.log('AI Response:', JSON.stringify(aiResponse));
+
+    // Handle response - Cloudflare Workers AI returns OpenAI-compatible format
     let responseText = '';
     if (typeof aiResponse === 'string') {
       responseText = aiResponse;
     } else if (aiResponse && typeof aiResponse === 'object') {
       const resp = aiResponse as any;
-      if (resp.choices && resp.choices[0]?.message) {
-        const msg = resp.choices[0].message;
-        // Get content (final answer), not reasoning_content (thinking process)
-        responseText = msg.content || '';
-      } else {
-        responseText = resp.response || resp.result?.response || resp.generated_text || resp.text || '';
+      // Standard OpenAI format: choices[0].message.content
+      if (resp.choices && Array.isArray(resp.choices) && resp.choices.length > 0) {
+        const choice = resp.choices[0];
+        if (choice.message) {
+          responseText = choice.message.content || '';
+        } else if (choice.text) {
+          responseText = choice.text;
+        }
+      }
+      // Fallback for other response formats
+      if (!responseText) {
+        responseText = resp.response || resp.result || resp.generated_text || resp.text || '';
+        if (typeof responseText === 'object') {
+          responseText = JSON.stringify(responseText);
+        }
       }
     }
 
-    // Clean up response - remove markdown symbols and numbering
+    // If still empty, return error info
+    if (!responseText) {
+      console.error('Empty response. Full response:', JSON.stringify(aiResponse));
+      responseText = 'AI 暂时无法回答，请稍后再试。';
+    }
+
+    // Clean up response
     responseText = responseText
       .replace(/^\s*\d+\.\s*/gm, '')
       .replace(/^\s*[\*\-]\s*/gm, '')
