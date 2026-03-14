@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { getItem, setItem } from "../utils/storage";
 import i18n from "../i18n";
 import { supportedLanguages } from "../i18n";
+import { syncService } from "../services/syncService";
 
 export type Theme = "light" | "dark" | "eyecare";
 export type Language = "zh" | "en" | "ja" | "de" | "pt" | "es" | "ru" | "ar" | "ko" | "ms";
@@ -102,6 +103,14 @@ interface SettingsState {
   setLanguage: (language: Language) => void;
   setLearnOrder: (order: LearnOrder) => void;
   completeOnboarding: () => void;
+
+  // Cloud sync
+  setSettingsFromCloud: (settings: {
+    theme: Theme;
+    language: string;
+    learnOrder: LearnOrder;
+    onboardingCompleted: boolean;
+  }) => void;
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -125,6 +134,35 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   saveSettings: () => {
     const { settings } = get();
+    setItem(SETTINGS_KEY, settings);
+
+    // Sync to cloud
+    syncService.queueChange('settings', 'user', settings);
+  },
+
+  setSettingsFromCloud: (cloudSettings: {
+    theme: Theme;
+    language: string;
+    learnOrder: LearnOrder;
+    onboardingCompleted: boolean;
+  }) => {
+    const language = (supportedLanguages.includes(cloudSettings.language as typeof supportedLanguages[number])
+      ? cloudSettings.language
+      : 'en') as Language;
+
+    const settings: AppSettings = {
+      theme: cloudSettings.theme,
+      language,
+      learnOrder: cloudSettings.learnOrder,
+      onboardingCompleted: cloudSettings.onboardingCompleted,
+    };
+
+    applyTheme(settings.theme);
+    if (i18n.language !== settings.language) {
+      i18n.changeLanguage(settings.language);
+    }
+
+    set({ settings, isLoaded: true });
     setItem(SETTINGS_KEY, settings);
   },
 

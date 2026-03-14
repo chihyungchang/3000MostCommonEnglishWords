@@ -7,6 +7,7 @@ import {
   getNewWords,
 } from '../algorithms/sm2';
 import { getItem, setItem } from '../utils/storage';
+import { syncService } from '../services/syncService';
 
 const STORAGE_KEY = 'word_progress';
 
@@ -20,6 +21,9 @@ interface ProgressState {
   getProgress: (wordId: string) => WordProgress | undefined;
   updateProgress: (wordId: string, quality: ResponseQuality) => void;
   startLearning: (wordId: string) => void;
+
+  // Cloud sync actions
+  setProgressFromCloud: (data: Record<string, WordProgress>) => void;
 
   // Queries
   getWordsToReview: (limit?: number) => string[];
@@ -66,6 +70,9 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     progressMap.set(wordId, newProgress);
     set({ progressMap: new Map(progressMap) });
     saveProgress();
+
+    // Sync to cloud
+    syncService.queueChange('progress', wordId, newProgress);
   },
 
   startLearning: (wordId: string) => {
@@ -77,7 +84,18 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       progressMap.set(wordId, progress);
       set({ progressMap: new Map(progressMap) });
       saveProgress();
+
+      // Sync to cloud
+      syncService.queueChange('progress', wordId, progress);
     }
+  },
+
+  setProgressFromCloud: (data: Record<string, WordProgress>) => {
+    const progressMap = new Map(Object.entries(data));
+    set({ progressMap, isLoaded: true });
+    // Save to localStorage for offline access
+    const obj = Object.fromEntries(progressMap);
+    setItem(STORAGE_KEY, obj);
   },
 
   getWordsToReview: (limit = 50) => {

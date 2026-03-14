@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Trophy, Sparkles, Target, CheckCircle2, XCircle, Keyboard, MessageCircle } from 'lucide-react';
-import { WordCard, ProgressBar, ResponseButtons, AIChatDialog } from '../components';
+import { WordCard, ProgressBar, ResponseButtons, AIChatDialog, SyncIndicator } from '../components';
 import { useWordStore } from '../stores/wordStore';
 import { useProgressStore } from '../stores/progressStore';
 import { useUserStore } from '../stores/userStore';
@@ -339,10 +339,6 @@ export function Learn() {
 
   // Session complete
   if (sessionComplete) {
-    const accuracy = sessionStats.correct + sessionStats.wrong > 0
-      ? Math.round((sessionStats.correct / (sessionStats.correct + sessionStats.wrong)) * 100)
-      : 100;
-
     return (
       <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${isDesktop ? '' : 'pb-24'}`}>
         <div className="clay-card p-8 text-center max-w-md w-full">
@@ -361,8 +357,8 @@ export function Learn() {
               <p className="text-xs text-theme-secondary mt-1">{t('learn.review')}</p>
             </div>
             <div className="clay-card p-4 bg-warning-light/50">
-              <p className="text-3xl font-bold text-warning">{accuracy}%</p>
-              <p className="text-xs text-theme-secondary mt-1">{t('learn.accuracy')}</p>
+              <p className="text-3xl font-bold text-warning">+{sessionStats.xpEarned}</p>
+              <p className="text-xs text-theme-secondary mt-1">XP</p>
             </div>
           </div>
 
@@ -422,7 +418,9 @@ export function Learn() {
                   {currentPhase === 'new' ? t('learn.newWords') : t('learn.review')}
                 </span>
               </div>
-              {aiConfigured && (
+              <div className="flex items-center gap-4">
+                <SyncIndicator />
+                {aiConfigured && (
                 <button
                   onClick={() => setShowChat(!showChat)}
                   className={`clay-btn flex items-center gap-2 px-4 py-2 ${
@@ -432,7 +430,8 @@ export function Learn() {
                   <MessageCircle className="w-5 h-5" />
                   <span className="font-medium">{t('ai.chatTitle', 'AI 助教')}</span>
                 </button>
-              )}
+                )}
+              </div>
             </div>
             <ProgressBar
               current={currentProgress}
@@ -544,7 +543,7 @@ export function Learn() {
     <div className="min-h-screen pb-24 bg-theme-primary">
       <header className="clay-float mx-4 mt-4 p-4">
         <div className="max-w-lg mx-auto">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center justify-between mb-3">
             <span className={`clay-badge text-xs ${
               currentPhase === 'new'
                 ? 'bg-info-light text-info border-2 border-info/30'
@@ -552,6 +551,7 @@ export function Learn() {
             }`}>
               {currentPhase === 'new' ? t('learn.newWords') : t('learn.review')}
             </span>
+            <SyncIndicator />
           </div>
           <ProgressBar
             current={currentProgress}

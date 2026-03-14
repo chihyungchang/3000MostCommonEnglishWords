@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { UserStats, DailyTask, Achievement } from '../types';
 import { getItem, setItem, getTodayString, isYesterday, isToday } from '../utils/storage';
+import { syncService } from '../services/syncService';
 
 const STATS_KEY = 'user_stats';
 const TASKS_KEY = 'daily_tasks';
@@ -143,6 +144,9 @@ interface UserState {
   checkAchievements: () => string[]; // Returns new achievement IDs
   setDailyGoal: (goal: number) => void;
 
+  // Cloud sync actions
+  setStatsFromCloud: (stats: UserStats) => void;
+
   // Queries
   getLevel: () => number;
   getXPProgress: () => { current: number; needed: number; percentage: number };
@@ -182,6 +186,27 @@ export const useUserStore = create<UserState>((set, get) => ({
   saveUser: () => {
     const { stats, dailyTasks } = get();
     setItem(STATS_KEY, stats);
+    setItem(TASKS_KEY, dailyTasks);
+
+    // Sync to cloud
+    syncService.queueChange('stats', 'user', stats);
+  },
+
+  setStatsFromCloud: (cloudStats: UserStats) => {
+    const today = getTodayString();
+
+    // Reset daily stats if not today
+    if (cloudStats.lastActiveDate !== today) {
+      cloudStats.todayLearned = 0;
+      cloudStats.todayReviewed = 0;
+    }
+
+    // Create fresh daily tasks based on cloud settings
+    const dailyTasks = createDailyTasks(cloudStats.dailyGoal);
+    setItem('tasks_date', today);
+
+    set({ stats: cloudStats, dailyTasks, isLoaded: true });
+    setItem(STATS_KEY, cloudStats);
     setItem(TASKS_KEY, dailyTasks);
   },
 
