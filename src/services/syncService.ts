@@ -183,11 +183,11 @@ class SyncService {
           progressChanges.push({
             user_id: this.currentUserId,
             word_id: progress.wordId,
-            interval: progress.interval,
+            interval: Math.floor(progress.interval),
             ease_factor: progress.easeFactor,
             next_review_date: progress.nextReviewDate,
-            review_count: progress.reviewCount,
-            consecutive_correct: progress.consecutiveCorrect,
+            review_count: Math.floor(progress.reviewCount),
+            consecutive_correct: Math.floor(progress.consecutiveCorrect),
             last_review_date: progress.lastReviewDate || null,
             status: progress.status,
           });
@@ -274,11 +274,11 @@ class SyncService {
       result.push({
         user_id: userId,
         word_id: progress.wordId,
-        interval: progress.interval,
+        interval: Math.floor(progress.interval),
         ease_factor: progress.easeFactor,
         next_review_date: progress.nextReviewDate,
-        review_count: progress.reviewCount,
-        consecutive_correct: progress.consecutiveCorrect,
+        review_count: Math.floor(progress.reviewCount),
+        consecutive_correct: Math.floor(progress.consecutiveCorrect),
         last_review_date: progress.lastReviewDate || null,
         status: progress.status,
       });
@@ -305,17 +305,17 @@ class SyncService {
   private convertLocalStatsToCloud(userId: string, stats: UserStats): UserStatsInsert {
     return {
       user_id: userId,
-      streak: stats.streak,
-      longest_streak: stats.longestStreak,
-      total_words: stats.totalWords,
-      mastered_words: stats.masteredWords,
-      today_learned: stats.todayLearned,
-      today_reviewed: stats.todayReviewed,
+      streak: Math.floor(stats.streak),
+      longest_streak: Math.floor(stats.longestStreak),
+      total_words: Math.floor(stats.totalWords),
+      mastered_words: Math.floor(stats.masteredWords),
+      today_learned: Math.floor(stats.todayLearned),
+      today_reviewed: Math.floor(stats.todayReviewed),
       last_active_date: stats.lastActiveDate || null,
-      xp: stats.xp,
-      level: stats.level,
+      xp: Math.floor(stats.xp),
+      level: Math.floor(stats.level),
       achievements: stats.achievements,
-      daily_goal: stats.dailyGoal,
+      daily_goal: Math.floor(stats.dailyGoal),
     };
   }
 
