@@ -7,8 +7,7 @@ import { useAuth } from '../../providers/AuthProvider';
 export function LoginPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { signInWithEmail, signUpWithEmail, signInAnonymously, isLoading, isConfigured } =
-    useAuth();
+  const { signInWithEmail, signUpWithEmail, signInAnonymously, isConfigured } = useAuth();
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
@@ -17,6 +16,8 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAnonymousLoading, setIsAnonymousLoading] = useState(false);
 
   // 如果 Supabase 未配置，跳转到主应用
   if (!isConfigured) {
@@ -34,6 +35,7 @@ export function LoginPage() {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       if (mode === 'login') {
         await signInWithEmail(email, password);
@@ -43,15 +45,20 @@ export function LoginPage() {
       navigate('/');
     } catch (err) {
       setError((err as Error).message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleAnonymousLogin = async () => {
+    setIsAnonymousLoading(true);
     try {
       await signInAnonymously();
       navigate('/');
     } catch (err) {
       setError((err as Error).message);
+    } finally {
+      setIsAnonymousLoading(false);
     }
   };
 
@@ -198,9 +205,9 @@ export function LoginPage() {
           <button
             type="submit"
             className="clay-btn clay-btn-primary w-full py-4 flex items-center justify-center gap-2 text-base font-semibold"
-            disabled={isLoading}
+            disabled={isSubmitting || isAnonymousLoading}
           >
-            {isLoading ? (
+            {isSubmitting ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
@@ -224,19 +231,25 @@ export function LoginPage() {
         <button
           onClick={handleAnonymousLogin}
           className="clay-btn w-full py-4 flex items-center justify-center gap-3 group"
-          disabled={isLoading}
+          disabled={isSubmitting || isAnonymousLoading}
         >
-          <div className="w-10 h-10 rounded-xl bg-[var(--bg-tertiary)] flex items-center justify-center group-hover:bg-[var(--accent)]/10 transition-colors">
-            <Sparkles className="w-5 h-5 text-[var(--accent)]" />
-          </div>
-          <div className="text-left">
-            <p className="font-medium text-[var(--text-primary)]">
-              {t('auth.tryFirst', '免登录体验')}
-            </p>
-            <p className="text-xs text-[var(--text-tertiary)]">
-              {t('auth.anonymousHint', '稍后可绑定邮箱同步数据')}
-            </p>
-          </div>
+          {isAnonymousLoading ? (
+            <div className="w-5 h-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <>
+              <div className="w-10 h-10 rounded-xl bg-[var(--bg-tertiary)] flex items-center justify-center group-hover:bg-[var(--accent)]/10 transition-colors">
+                <Sparkles className="w-5 h-5 text-[var(--accent)]" />
+              </div>
+              <div className="text-left">
+                <p className="font-medium text-[var(--text-primary)]">
+                  {t('auth.tryFirst', '免登录体验')}
+                </p>
+                <p className="text-xs text-[var(--text-tertiary)]">
+                  {t('auth.anonymousHint', '稍后可绑定邮箱同步数据')}
+                </p>
+              </div>
+            </>
+          )}
         </button>
 
         {/* 底部提示 */}
