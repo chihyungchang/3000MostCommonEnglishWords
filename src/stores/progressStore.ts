@@ -6,7 +6,7 @@ import {
   getWordsToReview,
   getNewWords,
 } from '../algorithms/sm2';
-import { getItem, setItem } from '../utils/storage';
+import { getItem, setItem, removeItem } from '../utils/storage';
 import { syncService } from '../services/syncService';
 
 const STORAGE_KEY = 'word_progress';
@@ -96,6 +96,8 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     // Save to localStorage for offline access
     const obj = Object.fromEntries(progressMap);
     setItem(STORAGE_KEY, obj);
+    // Clear learn session so it will be re-created with cloud data
+    removeItem('learn_session');
   },
 
   getWordsToReview: (limit = 50) => {

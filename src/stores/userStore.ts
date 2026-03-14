@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { UserStats, DailyTask, Achievement } from '../types';
-import { getItem, setItem, getTodayString, isYesterday, isToday } from '../utils/storage';
+import { getItem, setItem, removeItem, getTodayString, isYesterday, isToday } from '../utils/storage';
 import { syncService } from '../services/syncService';
 
 const STATS_KEY = 'user_stats';
@@ -208,6 +208,8 @@ export const useUserStore = create<UserState>((set, get) => ({
     set({ stats: cloudStats, dailyTasks, isLoaded: true });
     setItem(STATS_KEY, cloudStats);
     setItem(TASKS_KEY, dailyTasks);
+    // Clear learn session so it will be re-created with cloud data
+    removeItem('learn_session');
   },
 
   addXP: (amount: number) => {
