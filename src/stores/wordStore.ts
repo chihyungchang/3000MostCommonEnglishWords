@@ -219,7 +219,11 @@ export const useWordStore = create<WordState>((set, get) => ({
 
   ensureWordsLoaded: async (ids: string[]) => {
     const state = get();
-    const missingIds = ids.filter((id) => !state.wordCache.has(id));
+    // Check for missing words OR words without meanings (stale cache)
+    const missingIds = ids.filter((id) => {
+      const cached = state.wordCache.get(id);
+      return !cached || !cached.meanings;
+    });
     if (missingIds.length === 0) return;
 
     // Try Supabase first
