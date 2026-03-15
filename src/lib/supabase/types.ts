@@ -227,6 +227,7 @@ export interface Database {
           synonyms: string[];
           audio: string | null;
           zh: string | null;
+          meanings: unknown[] | null;
           created_at: string;
           updated_at: string;
         };
@@ -241,6 +242,7 @@ export interface Database {
           synonyms?: string[];
           audio?: string | null;
           zh?: string | null;
+          meanings?: unknown[] | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -254,6 +256,7 @@ export interface Database {
           synonyms?: string[];
           audio?: string | null;
           zh?: string | null;
+          meanings?: unknown[] | null;
           updated_at?: string;
         };
       };
