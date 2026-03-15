@@ -85,6 +85,7 @@ function rowToWord(w: WordRow): Word {
     synonyms: w.synonyms || undefined,
     audioUrl: w.audio || undefined,
     zh: w.zh || undefined,
+    meanings: (w.meanings as Word['meanings']) || undefined,
   };
 }
 

@@ -4,7 +4,6 @@ import { Volume2, Sparkles, BookOpen, Quote, History, Link2 } from 'lucide-react
 import type { Word, DictMeaning } from '../types';
 import { useSpeech } from '../hooks/useSpeech';
 import { ClickableText } from './ClickableText';
-import { dictionaryService } from '../services/dictionaryService';
 
 // Map app POS tags to dictionary API POS
 const POS_MAP: Record<string, string[]> = {
@@ -67,44 +66,21 @@ export function WordCard({ word, showAnswer, onFlip, onPractice, size = 'normal'
     return set;
   }, [word.pos]);
 
-  // Load and sort meanings from dictionary service
+  // Sort meanings: matching POS first
   useEffect(() => {
-    let isMounted = true;
+    const rawMeanings = word.meanings || [];
 
-    const loadMeanings = async () => {
-      let rawMeanings: DictMeaning[] = [];
+    // Sort meanings: matching POS first, then others
+    const sorted = [...rawMeanings].sort((a, b) => {
+      const aMatches = targetPosSet.has(a.partOfSpeech);
+      const bMatches = targetPosSet.has(b.partOfSpeech);
+      if (aMatches && !bMatches) return -1;
+      if (!aMatches && bMatches) return 1;
+      return 0;
+    });
 
-      if (word.meanings && word.meanings.length > 0) {
-        rawMeanings = word.meanings;
-      } else {
-        // Wait for dictionary to load if not ready
-        if (!dictionaryService.isLoaded()) {
-          await dictionaryService.load();
-        }
-        rawMeanings = dictionaryService.getMeanings(word.id);
-      }
-
-      if (!isMounted) return;
-
-      // Sort meanings: matching POS first, then others
-      const sorted = [...rawMeanings].sort((a, b) => {
-        const aMatches = targetPosSet.has(a.partOfSpeech);
-        const bMatches = targetPosSet.has(b.partOfSpeech);
-        if (aMatches && !bMatches) return -1;
-        if (!aMatches && bMatches) return 1;
-        return 0;
-      });
-
-      setMeanings(sorted);
-    };
-
-    loadMeanings();
-    // Reset selected tab when word changes
+    setMeanings(sorted);
     setSelectedPosIndex(0);
-
-    return () => {
-      isMounted = false;
-    };
   }, [word.id, word.meanings, targetPosSet]);
 
   const handleSpeak = async () => {

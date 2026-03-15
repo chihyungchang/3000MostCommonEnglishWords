@@ -9,7 +9,6 @@ import { useUserStore } from './stores/userStore';
 import { useSettingsStore } from './stores/themeStore';
 import { AppProviders } from './providers/AppProviders';
 import { useAuth } from './providers/AuthProvider';
-import { dictionaryService } from './services/dictionaryService';
 import './i18n';
 
 function AppContent() {
@@ -26,8 +25,6 @@ function AppContent() {
     loadProgress();
     loadUser();
     loadSettings();
-    // Load dictionary data for rich word information
-    dictionaryService.load();
   }, [loadWords, loadProgress, loadUser, loadSettings]);
 
   // Show loading only while auth is checking
