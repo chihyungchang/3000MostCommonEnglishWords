@@ -75,6 +75,7 @@ export function WordCard({ word, showAnswer, onFlip, onPractice, size = 'normal'
     // Only allow flip if answer is not shown yet
     if (!showAnswer) {
       onFlip();
+      handleSpeak(); // Auto-play pronunciation when revealing answer
     }
   };
 
