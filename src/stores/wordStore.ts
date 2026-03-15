@@ -28,7 +28,7 @@ interface WordState {
   getWordCountByLevel: (level: string) => number;
 }
 
-const CACHE_KEY = 'word_cache_v2';
+const CACHE_KEY = 'word_cache_v3'; // v3: includes meanings from Supabase
 const INDEX_CACHE_KEY = 'word_index_v1';
 
 function loadLocalCache(): Map<string, Word> {
@@ -119,13 +119,13 @@ async function fetchIndexFromSupabase(): Promise<WordIndex[] | null> {
   }
 }
 
-// Fetch words by IDs from Supabase (with 3s timeout)
+// Fetch words by IDs from Supabase (with 5s timeout)
 async function fetchWordsByIds(ids: string[]): Promise<Word[] | null> {
   if (!isSupabaseConfigured || ids.length === 0) return null;
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     const { data, error } = await supabase
       .from('words')
