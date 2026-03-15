@@ -15,7 +15,7 @@ function AppContent() {
   const { isAuthenticated, isLoading: authLoading, isConfigured } = useAuth();
 
   // Preload data
-  const { loadWords } = useWordStore();
+  const { loadWords, isLoaded: wordsLoaded, isLoading: wordsLoading } = useWordStore();
   const { loadProgress } = useProgressStore();
   const { loadUser } = useUserStore();
   const { settings, isLoaded, loadSettings } = useSettingsStore();
@@ -27,8 +27,8 @@ function AppContent() {
     loadSettings();
   }, [loadWords, loadProgress, loadUser, loadSettings]);
 
-  // Show loading while auth is checking
-  if (authLoading) {
+  // Show loading while auth is checking or words are loading
+  if (authLoading || wordsLoading || !wordsLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
         <div className="clay-card p-8 flex flex-col items-center gap-4">
