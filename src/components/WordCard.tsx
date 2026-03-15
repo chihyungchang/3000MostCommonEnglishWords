@@ -54,25 +54,42 @@ export function WordCard({ word, showAnswer, onFlip, onPractice, size = 'normal'
 
   // Load and sort meanings from dictionary service
   useEffect(() => {
-    let rawMeanings: DictMeaning[] = [];
-    if (word.meanings && word.meanings.length > 0) {
-      rawMeanings = word.meanings;
-    } else {
-      rawMeanings = dictionaryService.getMeanings(word.id);
-    }
+    let isMounted = true;
 
-    // Sort meanings: matching POS first, then others
-    const sorted = [...rawMeanings].sort((a, b) => {
-      const aMatches = targetPosSet.has(a.partOfSpeech);
-      const bMatches = targetPosSet.has(b.partOfSpeech);
-      if (aMatches && !bMatches) return -1;
-      if (!aMatches && bMatches) return 1;
-      return 0;
-    });
+    const loadMeanings = async () => {
+      let rawMeanings: DictMeaning[] = [];
 
-    setMeanings(sorted);
+      if (word.meanings && word.meanings.length > 0) {
+        rawMeanings = word.meanings;
+      } else {
+        // Wait for dictionary to load if not ready
+        if (!dictionaryService.isLoaded()) {
+          await dictionaryService.load();
+        }
+        rawMeanings = dictionaryService.getMeanings(word.id);
+      }
+
+      if (!isMounted) return;
+
+      // Sort meanings: matching POS first, then others
+      const sorted = [...rawMeanings].sort((a, b) => {
+        const aMatches = targetPosSet.has(a.partOfSpeech);
+        const bMatches = targetPosSet.has(b.partOfSpeech);
+        if (aMatches && !bMatches) return -1;
+        if (!aMatches && bMatches) return 1;
+        return 0;
+      });
+
+      setMeanings(sorted);
+    };
+
+    loadMeanings();
     // Reset expanded state when word changes
     setExpandedMeanings(new Set([0]));
+
+    return () => {
+      isMounted = false;
+    };
   }, [word.id, word.meanings, targetPosSet]);
 
   const toggleMeaning = (index: number) => {
