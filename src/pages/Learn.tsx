@@ -39,7 +39,7 @@ export function Learn() {
   const { isDesktop } = useDevice();
 
   // Stores
-  const { words, isLoaded: wordsLoaded, loadWords, getWord } = useWordStore();
+  const { isLoaded: wordsLoaded, loadWords, getWord, getWordIds, ensureWordsLoaded } = useWordStore();
   const {
     isLoaded: progressLoaded,
     loadProgress,
@@ -167,7 +167,7 @@ export function Learn() {
         });
       } else {
         // Create new session
-        const wordIds = words.map((w) => w.id);
+        const wordIds = getWordIds();
         // Calculate remaining new words for today (consider already learned today)
         const remainingNewWords = Math.max(0, stats.dailyGoal - stats.todayLearned);
         const newWords = remainingNewWords > 0 ? getNewWords(wordIds, remainingNewWords) : [];
@@ -197,7 +197,15 @@ export function Learn() {
         });
       }
     }
-  }, [wordsLoaded, progressLoaded, settingsLoaded, userLoaded, words, stats.dailyGoal, stats.todayLearned, settings.learnOrder, getNewWords, getWordsToReview, startLearning, session.sessionComplete]);
+  }, [wordsLoaded, progressLoaded, settingsLoaded, userLoaded, getWordIds, stats.dailyGoal, stats.todayLearned, settings.learnOrder, getNewWords, getWordsToReview, startLearning, session.sessionComplete]);
+
+  // Load full word data for current session
+  useEffect(() => {
+    if (initialized && (studyWords.length > 0 || reviewWords.length > 0)) {
+      const allSessionWords = [...studyWords, ...reviewWords];
+      ensureWordsLoaded(allSessionWords);
+    }
+  }, [initialized, studyWords, reviewWords, ensureWordsLoaded]);
 
   // Save session whenever relevant state changes
   useEffect(() => {

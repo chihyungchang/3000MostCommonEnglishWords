@@ -10,7 +10,7 @@ import { useDevice } from '../hooks/useDevice';
 export function Stats() {
   const { t } = useTranslation();
   const { isDesktop } = useDevice();
-  const { words, isLoaded: wordsLoaded, loadWords } = useWordStore();
+  const { isLoaded: wordsLoaded, loadWords, getTotalWordCount, getWordCountByLevel } = useWordStore();
   const { isLoaded: progressLoaded, loadProgress, getStats } = useProgressStore();
   const { stats: userStats, isLoaded: userLoaded, loadUser } = useUserStore();
 
@@ -32,7 +32,7 @@ export function Stats() {
   }
 
   const progressStats = getStats();
-  const totalWords = words.length;
+  const totalWords = getTotalWordCount();
   const learnedPercentage = Math.round((progressStats.total / totalWords) * 100);
 
   const levelConfig: Record<string, { gradient: string; bg: string }> = {
@@ -113,13 +113,13 @@ export function Stats() {
                 <h3 className="text-lg font-semibold text-theme-primary mb-6">CEFR Levels</h3>
                 <div className="grid grid-cols-2 gap-4">
                   {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map((level) => {
-                    const levelWords = words.filter((w) => w.level === level);
+                    const levelWordCount = getWordCountByLevel(level);
                     const config = levelConfig[level];
                     return (
                       <div key={level} className={`clay-card p-4 ${config.bg}`}>
                         <div className="flex justify-between items-center mb-3">
                           <span className="text-lg font-bold text-theme-primary">{level}</span>
-                          <span className="text-sm text-theme-secondary font-medium">{levelWords.length} {t('settings.words')}</span>
+                          <span className="text-sm text-theme-secondary font-medium">{levelWordCount} {t('settings.words')}</span>
                         </div>
                         <div className="clay-progress h-3">
                           <div className={`clay-progress-bar bg-linear-to-r ${config.gradient} h-3`} style={{ width: '0%' }} />
@@ -255,13 +255,13 @@ export function Stats() {
           <h3 className="font-semibold text-theme-primary mb-4">CEFR Levels</h3>
           <div className="space-y-3">
             {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map((level) => {
-              const levelWords = words.filter((w) => w.level === level);
+              const levelWordCount = getWordCountByLevel(level);
               const config = levelConfig[level];
               return (
                 <div key={level}>
                   <div className="flex justify-between text-sm mb-2">
                     <span className="font-bold text-theme-primary">{level}</span>
-                    <span className="text-theme-secondary">{levelWords.length} {t('settings.words')}</span>
+                    <span className="text-theme-secondary">{levelWordCount} {t('settings.words')}</span>
                   </div>
                   <div className="clay-progress h-2">
                     <div className={`clay-progress-bar bg-linear-to-r ${config.gradient} h-2`} style={{ width: '0%' }} />
