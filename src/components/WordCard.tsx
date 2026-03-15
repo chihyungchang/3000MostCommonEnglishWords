@@ -232,8 +232,8 @@ export function WordCard({ word, showAnswer, onFlip, onPractice, size = 'normal'
 
         {/* Answer content */}
         <div
-          className={`overflow-hidden transition-all duration-300 ease-out ${
-            showAnswer ? 'max-h-150 opacity-100 overflow-y-auto' : 'max-h-0 opacity-0'
+          className={`transition-all duration-300 ease-out ${
+            showAnswer ? 'opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
           }`}
         >
           <div className={`border-t-3 border-theme pt-6 ${isLarge ? 'space-y-6' : 'space-y-4'}`}>
