@@ -153,7 +153,7 @@ export function WordCard({ word, showAnswer, onFlip, onPractice, size = 'normal'
         >
           <div className={`border-t-3 border-theme pt-6 ${isLarge ? 'space-y-6' : 'space-y-4'}`}>
             {/* Definition */}
-            {word.definition && (
+            {(word.definition || word.zh) && (
               <div className="clay-card p-4 bg-theme-tertiary/50">
                 <div className="flex items-center gap-2 mb-2">
                   <BookOpen className={`text-accent ${isLarge ? 'w-5 h-5' : 'w-4 h-4'}`} />
@@ -161,11 +161,18 @@ export function WordCard({ word, showAnswer, onFlip, onPractice, size = 'normal'
                     {t('card.definition')}
                   </p>
                 </div>
-                <ClickableText
-                  text={word.definition}
-                  className={`text-theme-primary font-medium ${isLarge ? 'text-xl' : 'text-base'}`}
-                  highlightWord={word.word}
-                />
+                {word.zh && (
+                  <p className={`text-accent font-bold mb-2 ${isLarge ? 'text-2xl' : 'text-xl'}`}>
+                    {word.zh}
+                  </p>
+                )}
+                {word.definition && (
+                  <ClickableText
+                    text={word.definition}
+                    className={`text-theme-primary font-medium ${isLarge ? 'text-xl' : 'text-base'}`}
+                    highlightWord={word.word}
+                  />
+                )}
               </div>
             )}
 

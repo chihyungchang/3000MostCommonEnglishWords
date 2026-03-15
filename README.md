@@ -9,7 +9,7 @@ A modern vocabulary learning application for mastering the 3000 most common Engl
 - **Spaced Repetition (SM-2)**: Scientifically proven algorithm to optimize your learning
 - **AI Tutor**: Ask questions about any word with Cloudflare Workers AI
 - **Text-to-Speech**: Native pronunciation powered by AI TTS
-- **Multi-language Support**: Interface available in 10 languages (English, 中文, 日本語, 한국어, Español, Deutsch, Português, Русский, العربية, Bahasa Melayu)
+- **Bilingual Interface**: Supports Chinese (中文) and English
 - **Theme Options**: Light, Dark, and Eye Care (green) themes
 - **Progress Tracking**: Visual statistics of your learning journey
 - **Offline Ready**: All word data stored locally

@@ -147,18 +147,10 @@ export function Settings() {
             {t("settings.language")}
           </h3>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {[
             { code: "zh" as const, label: "中文" },
             { code: "en" as const, label: "English" },
-            { code: "ja" as const, label: "日本語" },
-            { code: "de" as const, label: "Deutsch" },
-            { code: "pt" as const, label: "Português" },
-            { code: "es" as const, label: "Español" },
-            { code: "ru" as const, label: "Русский" },
-            { code: "ar" as const, label: "العربية" },
-            { code: "ko" as const, label: "한국어" },
-            { code: "ms" as const, label: "Melayu" },
           ].map(({ code, label }) => (
             <button
               key={code}

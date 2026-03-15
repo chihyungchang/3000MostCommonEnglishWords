@@ -7,14 +7,6 @@ import { useUserStore } from "../stores/userStore";
 const languages = [
   { code: "zh" as const, label: "中文", flag: "🇨🇳" },
   { code: "en" as const, label: "English", flag: "🇺🇸" },
-  { code: "ja" as const, label: "日本語", flag: "🇯🇵" },
-  { code: "de" as const, label: "Deutsch", flag: "🇩🇪" },
-  { code: "pt" as const, label: "Português", flag: "🇧🇷" },
-  { code: "es" as const, label: "Español", flag: "🇪🇸" },
-  { code: "ru" as const, label: "Русский", flag: "🇷🇺" },
-  { code: "ar" as const, label: "العربية", flag: "🇸🇦" },
-  { code: "ko" as const, label: "한국어", flag: "🇰🇷" },
-  { code: "ms" as const, label: "Melayu", flag: "🇲🇾" },
 ];
 
 const goalOptions = [10, 15, 20, 30, 50];

@@ -5,7 +5,7 @@ import { supportedLanguages } from "../i18n";
 import { syncService } from "../services/syncService";
 
 export type Theme = "light" | "dark" | "eyecare";
-export type Language = "zh" | "en" | "ja" | "de" | "pt" | "es" | "ru" | "ar" | "ko" | "ms";
+export type Language = "zh" | "en";
 export type LearnOrder = "new-first" | "review-first";
 
 const SETTINGS_KEY = "app_settings";

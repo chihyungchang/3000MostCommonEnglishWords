@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Layout } from './components/Layout';
-import { Learn, Stats, Settings, Onboarding, Challenge } from './pages';
+import { Learn, Stats, Settings, Onboarding } from './pages';
 import { LoginPage } from './pages/Auth/LoginPage';
 import { useWordStore } from './stores/wordStore';
 import { useProgressStore } from './stores/progressStore';
@@ -59,7 +59,6 @@ function AppContent() {
         <Route path="/" element={<Learn />} />
         <Route path="/stats" element={<Stats />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/challenge" element={<Challenge />} />
         <Route path="/login" element={<LoginPage />} />
       </Routes>
     </Layout>

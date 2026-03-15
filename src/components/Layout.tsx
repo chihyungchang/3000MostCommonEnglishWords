@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, BarChart3, Settings, GraduationCap, Sparkles, Zap, Github } from 'lucide-react';
+import { BookOpen, BarChart3, Settings, GraduationCap, Sparkles, Github } from 'lucide-react';
 import { useDevice } from '../hooks/useDevice';
 import { useUserStore } from '../stores/userStore';
 
@@ -11,7 +11,6 @@ interface LayoutProps {
 
 const navItems = [
   { to: '/', icon: BookOpen, labelKey: 'nav.learn' },
-  { to: '/challenge', icon: Zap, labelKey: 'nav.challenge' },
   { to: '/stats', icon: BarChart3, labelKey: 'nav.stats' },
   { to: '/settings', icon: Settings, labelKey: 'nav.settings' },
 ];
