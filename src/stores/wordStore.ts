@@ -14,6 +14,7 @@ interface WordIndex {
 interface WordState {
   wordIndex: WordIndex[];
   wordCache: Map<string, Word>;
+  cacheVersion: number; // Increments when cache updates, triggers re-renders
   isLoaded: boolean;
   isLoading: boolean;
   error: string | null;
@@ -157,6 +158,7 @@ async function fetchIndexFromJSON(): Promise<WordIndex[]> {
 export const useWordStore = create<WordState>((set, get) => ({
   wordIndex: [],
   wordCache: loadLocalCache(),
+  cacheVersion: 0,
   isLoaded: false,
   isLoading: false,
   error: null,
@@ -233,7 +235,7 @@ export const useWordStore = create<WordState>((set, get) => ({
       for (const word of supabaseWords) {
         newCache.set(word.id, word);
       }
-      set({ wordCache: newCache });
+      set({ wordCache: newCache, cacheVersion: get().cacheVersion + 1 });
       saveLocalCache(newCache);
 
       // Check if we got all words
@@ -275,7 +277,7 @@ export const useWordStore = create<WordState>((set, get) => ({
           }
         }
 
-        set({ wordCache: newCache });
+        set({ wordCache: newCache, cacheVersion: get().cacheVersion + 1 });
         saveLocalCache(newCache);
       } catch {
         // Continue

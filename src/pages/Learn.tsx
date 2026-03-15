@@ -39,7 +39,8 @@ export function Learn() {
   const { isDesktop } = useDevice();
 
   // Stores
-  const { isLoaded: wordsLoaded, loadWords, getWord, getWordIds, ensureWordsLoaded } = useWordStore();
+  // cacheVersion triggers re-render when word cache updates (intentionally unused)
+  const { isLoaded: wordsLoaded, loadWords, getWord, getWordIds, ensureWordsLoaded, cacheVersion: _cacheVersion } = useWordStore();
   const {
     isLoaded: progressLoaded,
     loadProgress,
