@@ -215,6 +215,48 @@ export interface Database {
           hit_count?: number;
         };
       };
+      words: {
+        Row: {
+          id: string;
+          word: string;
+          pos: string[];
+          level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+          phonetic: string | null;
+          definition: string | null;
+          example: string | null;
+          synonyms: string[];
+          audio: string | null;
+          zh: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          word: string;
+          pos?: string[];
+          level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+          phonetic?: string | null;
+          definition?: string | null;
+          example?: string | null;
+          synonyms?: string[];
+          audio?: string | null;
+          zh?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          word?: string;
+          pos?: string[];
+          level?: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+          phonetic?: string | null;
+          definition?: string | null;
+          example?: string | null;
+          synonyms?: string[];
+          audio?: string | null;
+          zh?: string | null;
+          updated_at?: string;
+        };
+      };
     };
   };
 }

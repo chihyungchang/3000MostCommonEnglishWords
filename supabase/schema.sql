@@ -244,3 +244,36 @@ DROP POLICY IF EXISTS "Service role can update definitions" ON public.word_defin
 CREATE POLICY "Service role can update definitions"
   ON public.word_definitions FOR UPDATE
   USING (true);
+
+-- 8. 词汇表 (Vocabulary Words - 3000 Most Common English Words)
+CREATE TABLE IF NOT EXISTS public.words (
+  id TEXT PRIMARY KEY,  -- e.g., "A1_0", "A1_1", etc.
+  word TEXT NOT NULL,
+  pos TEXT[] NOT NULL DEFAULT '{}',
+  level TEXT NOT NULL CHECK (level IN ('A1', 'A2', 'B1', 'B2', 'C1', 'C2')),
+  phonetic TEXT,
+  definition TEXT,
+  example TEXT,
+  synonyms TEXT[] DEFAULT '{}',
+  audio TEXT,
+  zh TEXT,  -- Chinese translation
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_words_level ON public.words(level);
+CREATE INDEX IF NOT EXISTS idx_words_word ON public.words(word);
+
+ALTER TABLE public.words ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can read words (public vocabulary)
+DROP POLICY IF EXISTS "Anyone can read words" ON public.words;
+CREATE POLICY "Anyone can read words"
+  ON public.words FOR SELECT
+  USING (true);
+
+DROP TRIGGER IF EXISTS update_words_updated_at ON public.words;
+CREATE TRIGGER update_words_updated_at
+  BEFORE UPDATE ON public.words
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
