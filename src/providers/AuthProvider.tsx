@@ -35,45 +35,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
 
+      // Always set loading to false first to prevent blocking
+      setIsLoading(false);
+
       if (session?.user) {
         // Set user ID for sync service
         syncService.setUserId(session.user.id);
 
-        // Download data from cloud on initial load
-        await syncService.downloadFromCloud(session.user.id);
+        // Download data from cloud in background (non-blocking)
+        syncService.downloadFromCloud(session.user.id).catch(console.error);
       }
-
-      setIsLoading(false);
     });
 
     // 监听认证状态变化
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setIsLoading(false);
 
       if (event === 'SIGNED_IN' && session?.user) {
         // Set user ID for sync service
         syncService.setUserId(session.user.id);
 
-        // Download data from cloud (cloud priority)
-        await syncService.downloadFromCloud(session.user.id);
+        // Download and upload in background (non-blocking)
+        (async () => {
+          try {
+            await syncService.downloadFromCloud(session.user.id);
 
-        // If local has data and not yet migrated, upload to cloud
-        if (MigrationService.hasLocalData() && !MigrationService.isMigrationCompleted(session.user.id)) {
-          await syncService.uploadAllToCloud(session.user.id);
-          // Mark migration as completed
-          localStorage.setItem(`vocab_migration_completed_${session.user.id}`, 'true');
-        }
+            // If local has data and not yet migrated, upload to cloud
+            if (MigrationService.hasLocalData() && !MigrationService.isMigrationCompleted(session.user.id)) {
+              await syncService.uploadAllToCloud(session.user.id);
+              localStorage.setItem(`vocab_migration_completed_${session.user.id}`, 'true');
+            }
+          } catch (error) {
+            console.error('Sync error:', error);
+          }
+        })();
       }
 
       if (event === 'SIGNED_OUT') {
         syncService.setUserId(null);
         syncService.cancelPendingChanges();
       }
-
-      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
