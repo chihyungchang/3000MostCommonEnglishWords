@@ -30,7 +30,7 @@ interface WordState {
 }
 
 const CACHE_KEY = 'word_cache_v3'; // v3: includes meanings from Supabase
-const INDEX_CACHE_KEY = 'word_index_v2'; // v2: properly sorted
+const INDEX_CACHE_KEY = 'word_index_v3'; // v3: full 3000 words
 
 function loadLocalCache(): Map<string, Word> {
   try {
