@@ -30,7 +30,7 @@ interface WordState {
 }
 
 const CACHE_KEY = 'word_cache_v3'; // v3: includes meanings from Supabase
-const INDEX_CACHE_KEY = 'word_index_v1';
+const INDEX_CACHE_KEY = 'word_index_v2'; // v2: properly sorted
 
 function loadLocalCache(): Map<string, Word> {
   try {
@@ -74,6 +74,18 @@ function saveIndexCache(index: WordIndex[]) {
   }
 }
 
+// Sort word IDs numerically (A1_0, A1_1, ..., A1_10, not A1_0, A1_1, A1_10, A1_2)
+function sortWordIndex(items: WordIndex[]): WordIndex[] {
+  const levelOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+  return [...items].sort((a, b) => {
+    const [levelA, numA] = a.id.split('_');
+    const [levelB, numB] = b.id.split('_');
+    const levelDiff = levelOrder.indexOf(levelA) - levelOrder.indexOf(levelB);
+    if (levelDiff !== 0) return levelDiff;
+    return parseInt(numA, 10) - parseInt(numB, 10);
+  });
+}
+
 function rowToWord(w: WordRow): Word {
   return {
     id: w.id,
@@ -110,11 +122,14 @@ async function fetchIndexFromSupabase(): Promise<WordIndex[] | null> {
       return null;
     }
 
-    return (data as Pick<WordRow, 'id' | 'word' | 'level'>[]).map((w) => ({
+    const items = (data as Pick<WordRow, 'id' | 'word' | 'level'>[]).map((w) => ({
       id: w.id,
       word: w.word,
       level: w.level,
     }));
+
+    // Sort numerically (A1_0, A1_1, A1_2, ..., A1_10, not A1_0, A1_1, A1_10, A1_2)
+    return sortWordIndex(items);
   } catch {
     return null;
   }
