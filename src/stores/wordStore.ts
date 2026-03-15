@@ -12,11 +12,8 @@ interface WordIndex {
 }
 
 interface WordState {
-  // Lightweight index (always loaded)
   wordIndex: WordIndex[];
-  // Full word data cache
   wordCache: Map<string, Word>;
-
   isLoaded: boolean;
   isLoading: boolean;
   error: string | null;
@@ -34,7 +31,6 @@ interface WordState {
 const CACHE_KEY = 'word_cache_v2';
 const INDEX_CACHE_KEY = 'word_index_v1';
 
-// Load cache from localStorage
 function loadLocalCache(): Map<string, Word> {
   try {
     const cached = localStorage.getItem(CACHE_KEY);
@@ -43,23 +39,20 @@ function loadLocalCache(): Map<string, Word> {
       return new Map(Object.entries(parsed));
     }
   } catch {
-    // Ignore cache errors
+    // Ignore
   }
   return new Map();
 }
 
-// Save cache to localStorage (max 50 words to keep it small)
 function saveLocalCache(cache: Map<string, Word>) {
   try {
     const entries = Array.from(cache.entries()).slice(-50);
-    const obj = Object.fromEntries(entries);
-    localStorage.setItem(CACHE_KEY, JSON.stringify(obj));
+    localStorage.setItem(CACHE_KEY, JSON.stringify(Object.fromEntries(entries)));
   } catch {
-    // Ignore storage errors
+    // Ignore
   }
 }
 
-// Load index from localStorage
 function loadIndexCache(): WordIndex[] | null {
   try {
     const cached = localStorage.getItem(INDEX_CACHE_KEY);
@@ -67,21 +60,19 @@ function loadIndexCache(): WordIndex[] | null {
       return JSON.parse(cached);
     }
   } catch {
-    // Ignore cache errors
+    // Ignore
   }
   return null;
 }
 
-// Save index to localStorage
 function saveIndexCache(index: WordIndex[]) {
   try {
     localStorage.setItem(INDEX_CACHE_KEY, JSON.stringify(index));
   } catch {
-    // Ignore storage errors
+    // Ignore
   }
 }
 
-// Helper to convert WordRow to Word
 function rowToWord(w: WordRow): Word {
   return {
     id: w.id,
@@ -97,17 +88,25 @@ function rowToWord(w: WordRow): Word {
   };
 }
 
-// Fetch word index from Supabase
+// Fetch word index from Supabase (with 3s timeout)
 async function fetchIndexFromSupabase(): Promise<WordIndex[] | null> {
   if (!isSupabaseConfigured) return null;
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
     const { data, error } = await supabase
       .from('words')
       .select('id, word, level')
-      .order('id');
+      .order('id')
+      .abortSignal(controller.signal);
 
-    if (error || !data) return null;
+    clearTimeout(timeoutId);
+
+    if (error || !data || data.length === 0) {
+      return null;
+    }
 
     return (data as Pick<WordRow, 'id' | 'word' | 'level'>[]).map((w) => ({
       id: w.id,
@@ -119,22 +118,39 @@ async function fetchIndexFromSupabase(): Promise<WordIndex[] | null> {
   }
 }
 
-// Fetch words by IDs from Supabase
+// Fetch words by IDs from Supabase (with 3s timeout)
 async function fetchWordsByIds(ids: string[]): Promise<Word[] | null> {
-  if (!isSupabaseConfigured) return null;
+  if (!isSupabaseConfigured || ids.length === 0) return null;
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
     const { data, error } = await supabase
       .from('words')
       .select('*')
-      .in('id', ids);
+      .in('id', ids)
+      .abortSignal(controller.signal);
 
-    if (error || !data) return null;
+    clearTimeout(timeoutId);
+
+    if (error || !data || data.length === 0) {
+      return null;
+    }
 
     return (data as WordRow[]).map(rowToWord);
   } catch {
     return null;
   }
+}
+
+// Fetch word index from JSON file
+async function fetchIndexFromJSON(): Promise<WordIndex[]> {
+  const response = await fetch('/data/word-index.json');
+  if (!response.ok) {
+    throw new Error('Failed to load word index');
+  }
+  return response.json();
 }
 
 export const useWordStore = create<WordState>((set, get) => ({
@@ -151,7 +167,7 @@ export const useWordStore = create<WordState>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      // Try to load from localStorage cache first
+      // 1. Try localStorage cache first (instant)
       const cachedIndex = loadIndexCache();
       if (cachedIndex && cachedIndex.length > 0) {
         set({
@@ -159,7 +175,7 @@ export const useWordStore = create<WordState>((set, get) => ({
           isLoaded: true,
           isLoading: false,
         });
-        // Refresh from Supabase in background
+        // Refresh from Supabase in background (non-blocking)
         fetchIndexFromSupabase().then((newIndex) => {
           if (newIndex && newIndex.length > 0) {
             saveIndexCache(newIndex);
@@ -169,7 +185,7 @@ export const useWordStore = create<WordState>((set, get) => ({
         return;
       }
 
-      // Load from Supabase if configured
+      // 2. Try Supabase (with 3s timeout)
       const supabaseIndex = await fetchIndexFromSupabase();
       if (supabaseIndex && supabaseIndex.length > 0) {
         saveIndexCache(supabaseIndex);
@@ -181,32 +197,28 @@ export const useWordStore = create<WordState>((set, get) => ({
         return;
       }
 
-      // Fallback to JSON file
-      const response = await fetch('/data/word-index.json');
-      if (!response.ok) {
-        throw new Error('Failed to load word index');
-      }
-      const wordIndex: WordIndex[] = await response.json();
-      saveIndexCache(wordIndex);
-
+      // 3. Fallback to JSON file
+      console.log('Loading word index from JSON fallback...');
+      const jsonIndex = await fetchIndexFromJSON();
+      saveIndexCache(jsonIndex);
       set({
-        wordIndex,
+        wordIndex: jsonIndex,
         isLoaded: true,
         isLoading: false,
       });
     } catch (error) {
+      console.error('Failed to load words:', error);
       set({
         error: error instanceof Error ? error.message : 'Unknown error',
         isLoading: false,
+        isLoaded: true, // Mark as loaded to prevent infinite retry
       });
     }
   },
 
-  // Ensure specific words are loaded (fetch from Supabase or JSON)
   ensureWordsLoaded: async (ids: string[]) => {
     const state = get();
     const missingIds = ids.filter((id) => !state.wordCache.has(id));
-
     if (missingIds.length === 0) return;
 
     // Try Supabase first
@@ -218,63 +230,60 @@ export const useWordStore = create<WordState>((set, get) => ({
       }
       set({ wordCache: newCache });
       saveLocalCache(newCache);
-      return;
+
+      // Check if we got all words
+      const stillMissing = missingIds.filter((id) => !newCache.has(id));
+      if (stillMissing.length === 0) return;
     }
 
-    // Fallback to JSON files
+    // Fallback to JSON files for missing words
     const levelsNeeded = new Set<string>();
-    for (const id of missingIds) {
-      const level = id.split('_')[0];
-      levelsNeeded.add(level);
+    const currentMissing = missingIds.filter((id) => !get().wordCache.has(id));
+    for (const id of currentMissing) {
+      levelsNeeded.add(id.split('_')[0]);
     }
 
     for (const level of levelsNeeded) {
       try {
         const response = await fetch(`/data/${level}.json`);
-        if (response.ok) {
-          const rawWords = await response.json();
-          const newCache = new Map(get().wordCache);
+        if (!response.ok) continue;
 
-          for (let i = 0; i < rawWords.length; i++) {
-            const raw = rawWords[i];
-            const id = `${level}_${i}`;
-            if (missingIds.includes(id)) {
-              const word: Word = {
-                id,
-                word: raw.word,
-                pos: raw.pos || [],
-                level: raw.level,
-                phonetic: raw.phonetic,
-                definition: raw.definition,
-                example: raw.example,
-                synonyms: raw.synonyms,
-                audioUrl: raw.audio,
-                zh: raw.zh,
-              };
-              newCache.set(id, word);
-            }
+        const rawWords = await response.json();
+        const newCache = new Map(get().wordCache);
+
+        for (let i = 0; i < rawWords.length; i++) {
+          const raw = rawWords[i];
+          const id = `${level}_${i}`;
+          if (currentMissing.includes(id)) {
+            newCache.set(id, {
+              id,
+              word: raw.word,
+              pos: raw.pos || [],
+              level: raw.level,
+              phonetic: raw.phonetic,
+              definition: raw.definition,
+              example: raw.example,
+              synonyms: raw.synonyms,
+              audioUrl: raw.audio,
+              zh: raw.zh,
+            });
           }
-
-          set({ wordCache: newCache });
-          saveLocalCache(newCache);
         }
+
+        set({ wordCache: newCache });
+        saveLocalCache(newCache);
       } catch {
-        // Continue with other levels
+        // Continue
       }
     }
   },
 
-  getWord: (id: string) => {
-    return get().wordCache.get(id);
-  },
+  getWord: (id: string) => get().wordCache.get(id),
 
-  getWordIds: () => {
-    return get().wordIndex.map((w) => w.id);
-  },
+  getWordIds: () => get().wordIndex.map((w) => w.id),
 
-  getWordIdsByLevel: (level: string) => {
-    return get().wordIndex.filter((w) => w.level === level).map((w) => w.id);
-  },
+  getWordIdsByLevel: (level: string) =>
+    get().wordIndex.filter((w) => w.level === level).map((w) => w.id),
 
   getWordsByLevel: (level: string) => {
     const state = get();
@@ -284,11 +293,8 @@ export const useWordStore = create<WordState>((set, get) => ({
       .filter((w): w is Word => w !== undefined);
   },
 
-  getTotalWordCount: () => {
-    return get().wordIndex.length;
-  },
+  getTotalWordCount: () => get().wordIndex.length,
 
-  getWordCountByLevel: (level: string) => {
-    return get().wordIndex.filter((w) => w.level === level).length;
-  },
+  getWordCountByLevel: (level: string) =>
+    get().wordIndex.filter((w) => w.level === level).length,
 }));
