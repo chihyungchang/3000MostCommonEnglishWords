@@ -1,3 +1,19 @@
+// Dictionary definition structure
+export interface DictDefinition {
+  definition: string;
+  example?: string;
+  synonyms?: string[];
+  antonyms?: string[];
+}
+
+// Dictionary meaning structure (grouped by part of speech)
+export interface DictMeaning {
+  partOfSpeech: string;
+  definitions: DictDefinition[];
+  synonyms?: string[];
+  antonyms?: string[];
+}
+
 // Word data structure
 export interface Word {
   id: string;
@@ -12,6 +28,7 @@ export interface Word {
   synonyms?: string[];
   imageUrl?: string;
   audioUrl?: string; // Audio pronunciation URL
+  meanings?: DictMeaning[]; // Full dictionary meanings
 }
 
 // Learning progress for each word

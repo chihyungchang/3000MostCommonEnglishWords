@@ -1,9 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Volume2, Sparkles, BookOpen, Quote, History, Link2 } from 'lucide-react';
-import type { Word } from '../types';
+import { Volume2, Sparkles, BookOpen, Quote, History, Link2, ChevronDown, ChevronUp } from 'lucide-react';
+import type { Word, DictMeaning } from '../types';
 import { useSpeech } from '../hooks/useSpeech';
 import { ClickableText } from './ClickableText';
+import { dictionaryService } from '../services/dictionaryService';
 
 interface WordCardProps {
   word: Word;
@@ -18,10 +19,34 @@ export function WordCard({ word, showAnswer, onFlip, onPractice, size = 'normal'
   const { speak, speakingId, stop } = useSpeech();
   const [audioPlaying, setAudioPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [meanings, setMeanings] = useState<DictMeaning[]>([]);
+  const [expandedMeanings, setExpandedMeanings] = useState<Set<number>>(new Set([0])); // First meaning expanded by default
 
   const isLarge = size === 'large';
   const isWordSpeaking = audioPlaying || speakingId === 'word';
   const isExampleSpeaking = speakingId === 'example';
+
+  // Load meanings from dictionary service
+  useEffect(() => {
+    if (word.meanings && word.meanings.length > 0) {
+      setMeanings(word.meanings);
+    } else {
+      const dictMeanings = dictionaryService.getMeanings(word.id);
+      setMeanings(dictMeanings);
+    }
+    // Reset expanded state when word changes
+    setExpandedMeanings(new Set([0]));
+  }, [word.id, word.meanings]);
+
+  const toggleMeaning = (index: number) => {
+    const newExpanded = new Set(expandedMeanings);
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index);
+    } else {
+      newExpanded.add(index);
+    }
+    setExpandedMeanings(newExpanded);
+  };
 
   const handleSpeak = async () => {
     stop();
@@ -149,36 +174,99 @@ export function WordCard({ word, showAnswer, onFlip, onPractice, size = 'normal'
         {/* Answer content */}
         <div
           className={`overflow-hidden transition-all duration-300 ease-out ${
-            showAnswer ? 'max-h-150 opacity-100' : 'max-h-0 opacity-0'
+            showAnswer ? 'max-h-150 opacity-100 overflow-y-auto' : 'max-h-0 opacity-0'
           }`}
         >
           <div className={`border-t-3 border-theme pt-6 ${isLarge ? 'space-y-6' : 'space-y-4'}`}>
-            {/* Definition */}
-            {(word.definition || word.zh) && (
-              <div className="clay-card p-4 bg-theme-tertiary/50">
-                <div className="flex items-center gap-2 mb-2">
-                  <BookOpen className={`text-accent ${isLarge ? 'w-5 h-5' : 'w-4 h-4'}`} />
-                  <p className={`text-theme-secondary font-semibold ${isLarge ? 'text-base' : 'text-sm'}`}>
-                    {t('card.definition')}
-                  </p>
-                </div>
-                {word.zh && (
-                  <p className={`text-accent font-bold mb-2 ${isLarge ? 'text-2xl' : 'text-xl'}`}>
-                    {word.zh}
-                  </p>
-                )}
-                {word.definition && (
+            {/* Chinese Translation */}
+            {word.zh && (
+              <div className="clay-card p-4 bg-accent-light/30">
+                <p className={`text-accent font-bold ${isLarge ? 'text-2xl' : 'text-xl'}`}>
+                  {word.zh}
+                </p>
+              </div>
+            )}
+
+            {/* Meanings from dictionary */}
+            {meanings.length > 0 ? (
+              <div className={`${isLarge ? 'space-y-4' : 'space-y-3'}`}>
+                {meanings.map((meaning, idx) => (
+                  <div key={idx} className="clay-card p-4 bg-theme-tertiary/50">
+                    {/* POS Header - Clickable to expand/collapse */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleMeaning(idx);
+                      }}
+                      className="w-full flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        <BookOpen className={`text-accent ${isLarge ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                        <span className={`clay-badge bg-info-light text-info border-2 border-info/30 ${isLarge ? 'px-3 py-1 text-sm' : 'px-2 py-0.5 text-xs'}`}>
+                          {meaning.partOfSpeech}
+                        </span>
+                        <span className={`text-theme-tertiary ${isLarge ? 'text-sm' : 'text-xs'}`}>
+                          ({meaning.definitions.length} {meaning.definitions.length === 1 ? 'definition' : 'definitions'})
+                        </span>
+                      </div>
+                      {expandedMeanings.has(idx) ? (
+                        <ChevronUp className={`text-theme-tertiary ${isLarge ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                      ) : (
+                        <ChevronDown className={`text-theme-tertiary ${isLarge ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                      )}
+                    </button>
+
+                    {/* Definitions - Expanded content */}
+                    {expandedMeanings.has(idx) && (
+                      <div className={`mt-3 ${isLarge ? 'space-y-3' : 'space-y-2'}`}>
+                        {meaning.definitions.slice(0, 3).map((def, defIdx) => (
+                          <div key={defIdx} className={`pl-4 border-l-2 border-accent/30 ${isLarge ? 'py-2' : 'py-1'}`}>
+                            <ClickableText
+                              text={`${defIdx + 1}. ${def.definition}`}
+                              className={`text-theme-primary ${isLarge ? 'text-base' : 'text-sm'}`}
+                              highlightWord={word.word}
+                            />
+                            {def.example && (
+                              <div className={`mt-2 flex items-start gap-2`}>
+                                <Quote className={`text-accent shrink-0 ${isLarge ? 'w-4 h-4 mt-1' : 'w-3 h-3 mt-0.5'}`} />
+                                <p className={`text-theme-secondary italic ${isLarge ? 'text-sm' : 'text-xs'}`}>
+                                  "<ClickableText text={def.example} highlightWord={word.word} />"
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        {meaning.definitions.length > 3 && (
+                          <p className={`text-theme-tertiary pl-4 ${isLarge ? 'text-sm' : 'text-xs'}`}>
+                            +{meaning.definitions.length - 3} more definitions
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              /* Fallback to old definition display if no meanings */
+              word.definition && (
+                <div className="clay-card p-4 bg-theme-tertiary/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BookOpen className={`text-accent ${isLarge ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                    <p className={`text-theme-secondary font-semibold ${isLarge ? 'text-base' : 'text-sm'}`}>
+                      {t('card.definition')}
+                    </p>
+                  </div>
                   <ClickableText
                     text={word.definition}
                     className={`text-theme-primary font-medium ${isLarge ? 'text-xl' : 'text-base'}`}
                     highlightWord={word.word}
                   />
-                )}
-              </div>
+                </div>
+              )
             )}
 
-            {/* Example */}
-            {word.example && (
+            {/* Example - Only show if no meanings with examples */}
+            {word.example && meanings.length === 0 && (
               <div className="clay-card p-4 bg-accent-light/30">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
