@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Volume2, Sparkles, BookOpen, Quote, History, Link2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Volume2, Sparkles, BookOpen, Quote, History, Link2 } from 'lucide-react';
 import type { Word, DictMeaning } from '../types';
 import { useSpeech } from '../hooks/useSpeech';
 import { ClickableText } from './ClickableText';
@@ -20,6 +20,21 @@ const POS_MAP: Record<string, string[]> = {
   num: ['numeral'],
 };
 
+// Map dictionary POS to Chinese
+const POS_TO_CHINESE: Record<string, string> = {
+  noun: '名词',
+  verb: '动词',
+  adjective: '形容词',
+  adverb: '副词',
+  preposition: '介词',
+  conjunction: '连词',
+  pronoun: '代词',
+  determiner: '限定词',
+  interjection: '感叹词',
+  exclamation: '感叹词',
+  numeral: '数词',
+};
+
 interface WordCardProps {
   word: Word;
   showAnswer: boolean;
@@ -34,7 +49,7 @@ export function WordCard({ word, showAnswer, onFlip, onPractice, size = 'normal'
   const [audioPlaying, setAudioPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [meanings, setMeanings] = useState<DictMeaning[]>([]);
-  const [expandedMeanings, setExpandedMeanings] = useState<Set<number>>(new Set([0])); // First meaning expanded by default
+  const [selectedPosIndex, setSelectedPosIndex] = useState(0); // Tab index for POS switching
 
   const isLarge = size === 'large';
   const isWordSpeaking = audioPlaying || speakingId === 'word';
@@ -84,23 +99,13 @@ export function WordCard({ word, showAnswer, onFlip, onPractice, size = 'normal'
     };
 
     loadMeanings();
-    // Reset expanded state when word changes
-    setExpandedMeanings(new Set([0]));
+    // Reset selected tab when word changes
+    setSelectedPosIndex(0);
 
     return () => {
       isMounted = false;
     };
   }, [word.id, word.meanings, targetPosSet]);
-
-  const toggleMeaning = (index: number) => {
-    const newExpanded = new Set(expandedMeanings);
-    if (newExpanded.has(index)) {
-      newExpanded.delete(index);
-    } else {
-      newExpanded.add(index);
-    }
-    setExpandedMeanings(newExpanded);
-  };
 
   const handleSpeak = async () => {
     stop();
@@ -241,64 +246,57 @@ export function WordCard({ word, showAnswer, onFlip, onPractice, size = 'normal'
               </div>
             )}
 
-            {/* Meanings from dictionary */}
+            {/* Meanings from dictionary - Tab switching */}
             {meanings.length > 0 ? (
-              <div className={`${isLarge ? 'space-y-4' : 'space-y-3'}`}>
-                {meanings.map((meaning, idx) => (
-                  <div key={idx} className="clay-card p-4 bg-theme-tertiary/50">
-                    {/* POS Header - Clickable to expand/collapse */}
+              <div className="clay-card p-4 bg-theme-tertiary/50">
+                {/* POS Tabs */}
+                <div className="flex items-center gap-2 mb-4 flex-wrap">
+                  <BookOpen className={`text-accent shrink-0 ${isLarge ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                  {meanings.map((meaning, idx) => (
                     <button
+                      key={idx}
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleMeaning(idx);
+                        setSelectedPosIndex(idx);
                       }}
-                      className="w-full flex items-center justify-between"
+                      className={`clay-badge border-2 transition-all ${isLarge ? 'px-3 py-1.5 text-sm' : 'px-2.5 py-1 text-xs'} ${
+                        selectedPosIndex === idx
+                          ? 'bg-accent text-white border-accent'
+                          : 'bg-info-light text-info border-info/30 hover:border-accent/50'
+                      }`}
                     >
-                      <div className="flex items-center gap-2">
-                        <BookOpen className={`text-accent ${isLarge ? 'w-5 h-5' : 'w-4 h-4'}`} />
-                        <span className={`clay-badge bg-info-light text-info border-2 border-info/30 ${isLarge ? 'px-3 py-1 text-sm' : 'px-2 py-0.5 text-xs'}`}>
-                          {meaning.partOfSpeech}
-                        </span>
-                        <span className={`text-theme-tertiary ${isLarge ? 'text-sm' : 'text-xs'}`}>
-                          ({meaning.definitions.length} {meaning.definitions.length === 1 ? 'definition' : 'definitions'})
-                        </span>
-                      </div>
-                      {expandedMeanings.has(idx) ? (
-                        <ChevronUp className={`text-theme-tertiary ${isLarge ? 'w-5 h-5' : 'w-4 h-4'}`} />
-                      ) : (
-                        <ChevronDown className={`text-theme-tertiary ${isLarge ? 'w-5 h-5' : 'w-4 h-4'}`} />
-                      )}
+                      {POS_TO_CHINESE[meaning.partOfSpeech] || meaning.partOfSpeech}
                     </button>
+                  ))}
+                </div>
 
-                    {/* Definitions - Expanded content */}
-                    {expandedMeanings.has(idx) && (
-                      <div className={`mt-3 ${isLarge ? 'space-y-3' : 'space-y-2'}`}>
-                        {meaning.definitions.slice(0, 3).map((def, defIdx) => (
-                          <div key={defIdx} className={`pl-4 border-l-2 border-accent/30 ${isLarge ? 'py-2' : 'py-1'}`}>
-                            <ClickableText
-                              text={`${defIdx + 1}. ${def.definition}`}
-                              className={`text-theme-primary ${isLarge ? 'text-base' : 'text-sm'}`}
-                              highlightWord={word.word}
-                            />
-                            {def.example && (
-                              <div className={`mt-2 flex items-start gap-2`}>
-                                <Quote className={`text-accent shrink-0 ${isLarge ? 'w-4 h-4 mt-1' : 'w-3 h-3 mt-0.5'}`} />
-                                <p className={`text-theme-secondary italic ${isLarge ? 'text-sm' : 'text-xs'}`}>
-                                  "<ClickableText text={def.example} highlightWord={word.word} />"
-                                </p>
-                              </div>
-                            )}
+                {/* Selected POS Definitions */}
+                {meanings[selectedPosIndex] && (
+                  <div className={`${isLarge ? 'space-y-3' : 'space-y-2'}`}>
+                    {meanings[selectedPosIndex].definitions.slice(0, 4).map((def, defIdx) => (
+                      <div key={defIdx} className={`pl-4 border-l-2 border-accent/30 ${isLarge ? 'py-2' : 'py-1'}`}>
+                        <ClickableText
+                          text={`${defIdx + 1}. ${def.definition}`}
+                          className={`text-theme-primary ${isLarge ? 'text-base' : 'text-sm'}`}
+                          highlightWord={word.word}
+                        />
+                        {def.example && (
+                          <div className={`mt-2 flex items-start gap-2`}>
+                            <Quote className={`text-accent shrink-0 ${isLarge ? 'w-4 h-4 mt-1' : 'w-3 h-3 mt-0.5'}`} />
+                            <p className={`text-theme-secondary italic ${isLarge ? 'text-sm' : 'text-xs'}`}>
+                              "<ClickableText text={def.example} highlightWord={word.word} />"
+                            </p>
                           </div>
-                        ))}
-                        {meaning.definitions.length > 3 && (
-                          <p className={`text-theme-tertiary pl-4 ${isLarge ? 'text-sm' : 'text-xs'}`}>
-                            +{meaning.definitions.length - 3} more definitions
-                          </p>
                         )}
                       </div>
+                    ))}
+                    {meanings[selectedPosIndex].definitions.length > 4 && (
+                      <p className={`text-theme-tertiary pl-4 ${isLarge ? 'text-sm' : 'text-xs'}`}>
+                        +{meanings[selectedPosIndex].definitions.length - 4} more definitions
+                      </p>
                     )}
                   </div>
-                ))}
+                )}
               </div>
             ) : (
               /* Fallback to old definition display if no meanings */
