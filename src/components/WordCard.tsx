@@ -1,10 +1,24 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Volume2, Sparkles, BookOpen, Quote, History, Link2, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Word, DictMeaning } from '../types';
 import { useSpeech } from '../hooks/useSpeech';
 import { ClickableText } from './ClickableText';
 import { dictionaryService } from '../services/dictionaryService';
+
+// Map app POS tags to dictionary API POS
+const POS_MAP: Record<string, string[]> = {
+  n: ['noun'],
+  v: ['verb'],
+  adj: ['adjective'],
+  adv: ['adverb'],
+  prep: ['preposition'],
+  conj: ['conjunction'],
+  pron: ['pronoun'],
+  det: ['determiner'],
+  interj: ['interjection', 'exclamation'],
+  num: ['numeral'],
+};
 
 interface WordCardProps {
   word: Word;
@@ -26,17 +40,40 @@ export function WordCard({ word, showAnswer, onFlip, onPractice, size = 'normal'
   const isWordSpeaking = audioPlaying || speakingId === 'word';
   const isExampleSpeaking = speakingId === 'example';
 
-  // Load meanings from dictionary service
-  useEffect(() => {
-    if (word.meanings && word.meanings.length > 0) {
-      setMeanings(word.meanings);
-    } else {
-      const dictMeanings = dictionaryService.getMeanings(word.id);
-      setMeanings(dictMeanings);
+  // Get target POS set from word's pos array
+  const targetPosSet = useMemo(() => {
+    const set = new Set<string>();
+    for (const pos of word.pos) {
+      const mapped = POS_MAP[pos];
+      if (mapped) {
+        mapped.forEach((p) => set.add(p));
+      }
     }
+    return set;
+  }, [word.pos]);
+
+  // Load and sort meanings from dictionary service
+  useEffect(() => {
+    let rawMeanings: DictMeaning[] = [];
+    if (word.meanings && word.meanings.length > 0) {
+      rawMeanings = word.meanings;
+    } else {
+      rawMeanings = dictionaryService.getMeanings(word.id);
+    }
+
+    // Sort meanings: matching POS first, then others
+    const sorted = [...rawMeanings].sort((a, b) => {
+      const aMatches = targetPosSet.has(a.partOfSpeech);
+      const bMatches = targetPosSet.has(b.partOfSpeech);
+      if (aMatches && !bMatches) return -1;
+      if (!aMatches && bMatches) return 1;
+      return 0;
+    });
+
+    setMeanings(sorted);
     // Reset expanded state when word changes
     setExpandedMeanings(new Set([0]));
-  }, [word.id, word.meanings]);
+  }, [word.id, word.meanings, targetPosSet]);
 
   const toggleMeaning = (index: number) => {
     const newExpanded = new Set(expandedMeanings);
