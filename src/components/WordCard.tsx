@@ -261,8 +261,8 @@ export function WordCard({ word, showAnswer, onFlip, onPractice, size = 'normal'
                       }}
                       className={`clay-badge border-2 transition-all ${isLarge ? 'px-3 py-1.5 text-sm' : 'px-2.5 py-1 text-xs'} ${
                         selectedPosIndex === idx
-                          ? 'bg-accent text-white border-accent'
-                          : 'bg-info-light text-info border-info/30 hover:border-accent/50'
+                          ? 'bg-accent/15 text-accent border-accent font-semibold'
+                          : 'bg-theme-tertiary/30 text-theme-secondary border-transparent hover:border-accent/30'
                       }`}
                     >
                       {POS_TO_CHINESE[meaning.partOfSpeech] || meaning.partOfSpeech}
