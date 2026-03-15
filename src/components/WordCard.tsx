@@ -206,18 +206,6 @@ export function WordCard({ word, showAnswer, onFlip, onPractice, size = 'normal'
           </p>
         )}
 
-        {/* POS tags */}
-        <div className={`flex flex-wrap gap-2 ${isLarge ? 'mb-6' : 'mb-4'}`}>
-          {word.pos.map((p) => (
-            <span
-              key={p}
-              className={`clay-badge bg-info-light text-info border-2 border-info/30 ${isLarge ? 'px-4 py-2 text-base' : ''}`}
-            >
-              {t(`pos.${p}`, p)}
-            </span>
-          ))}
-        </div>
-
         {/* Collapsed hint */}
         {!showAnswer && (
           <div className={`text-center ${isLarge ? 'py-10' : 'py-6'}`}>
