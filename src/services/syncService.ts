@@ -28,8 +28,30 @@ class SyncService {
   private currentUserId: string | null = null;
 
   setUserId(userId: string | null) {
+    console.log('[Sync] setUserId:', userId ? `${userId.substring(0, 8)}...` : 'null');
     this.currentUserId = userId;
     useSyncStore.getState().setUserId(userId);
+  }
+
+  /**
+   * Debug function to check sync status
+   * Call from console: window.debugSync()
+   */
+  debugSync(): void {
+    console.group('=== Sync Debug ===');
+    console.log('isSupabaseConfigured:', isSupabaseConfigured);
+    console.log('currentUserId:', this.currentUserId ? `${this.currentUserId.substring(0, 8)}...` : 'null');
+    console.log('pendingChanges:', this.changeQueue.size);
+    console.log('syncStore state:', useSyncStore.getState());
+
+    if (!isSupabaseConfigured) {
+      console.warn('⚠️ Supabase is NOT configured - sync disabled');
+    } else if (!this.currentUserId) {
+      console.warn('⚠️ No user logged in - changes will NOT sync to cloud');
+    } else {
+      console.log('✓ Sync is active');
+    }
+    console.groupEnd();
   }
 
   /**
@@ -39,6 +61,7 @@ class SyncService {
   async downloadFromCloud(userId: string): Promise<void> {
     if (!isSupabaseConfigured) return;
 
+    console.log(`[Sync] downloadFromCloud: userId=${userId.substring(0, 8)}...`);
     const syncStore = useSyncStore.getState();
     syncStore.setSyncing(true);
     syncStore.setSyncError(null);
@@ -52,27 +75,38 @@ class SyncService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const settingsResult = await (supabase.from('user_settings') as any).select('*').eq('user_id', userId).single();
 
+      console.log('[Sync] Cloud data:', {
+        progressCount: progressResult.data?.length || 0,
+        hasStats: !!statsResult.data,
+        hasSettings: !!settingsResult.data,
+      });
+
       // Apply word progress (cloud priority)
       if (progressResult.data && progressResult.data.length > 0) {
         const cloudProgress = this.convertCloudProgressToLocal(progressResult.data as WordProgressRow[]);
         useProgressStore.getState().setProgressFromCloud(cloudProgress);
+        console.log(`[Sync] ✓ Applied ${progressResult.data.length} progress entries from cloud`);
+      } else {
+        console.log('[Sync] No progress data in cloud for this user');
       }
 
       // Apply user stats (cloud priority)
       if (statsResult.data) {
         const cloudStats = this.convertCloudStatsToLocal(statsResult.data as UserStatsRow);
         useUserStore.getState().setStatsFromCloud(cloudStats);
+        console.log('[Sync] ✓ Applied stats from cloud');
       }
 
       // Apply settings (cloud priority)
       if (settingsResult.data) {
         const cloudSettings = this.convertCloudSettingsToLocal(settingsResult.data as UserSettingsRow);
         useSettingsStore.getState().setSettingsFromCloud(cloudSettings);
+        console.log('[Sync] ✓ Applied settings from cloud');
       }
 
       syncStore.setLastSyncTime(new Date().toISOString());
     } catch (error) {
-      console.error('Failed to download from cloud:', error);
+      console.error('[Sync] ✗ Failed to download from cloud:', error);
       syncStore.setSyncError(error instanceof Error ? error.message : 'Sync failed');
     } finally {
       syncStore.setSyncing(false);
@@ -137,8 +171,16 @@ class SyncService {
    * Queue a change for upload (debounced)
    */
   queueChange(type: ChangeType, key: string, data: unknown): void {
-    if (!isSupabaseConfigured || !this.currentUserId) return;
+    if (!isSupabaseConfigured) {
+      console.log('[Sync] queueChange skipped: Supabase not configured');
+      return;
+    }
+    if (!this.currentUserId) {
+      console.log('[Sync] queueChange skipped: No user logged in');
+      return;
+    }
 
+    console.log(`[Sync] queueChange: ${type}:${key}`);
     this.changeQueue.set(`${type}:${key}`, {
       type,
       data,
@@ -162,11 +204,15 @@ class SyncService {
     if (!isSupabaseConfigured || !this.currentUserId || this.changeQueue.size === 0) return;
 
     const syncStore = useSyncStore.getState();
-    if (!syncStore.isOnline) return;
+    if (!syncStore.isOnline) {
+      console.log('[Sync] flushChanges skipped: offline');
+      return;
+    }
 
     const changes = Array.from(this.changeQueue.entries());
     this.changeQueue.clear();
 
+    console.log(`[Sync] Flushing ${changes.length} changes to cloud...`);
     syncStore.setSyncing(true);
 
     try {
@@ -227,9 +273,10 @@ class SyncService {
         if (error) throw error;
       }
 
+      console.log('[Sync] ✓ Changes synced successfully');
       syncStore.setLastSyncTime(new Date().toISOString());
     } catch (error) {
-      console.error('Failed to flush changes:', error);
+      console.error('[Sync] ✗ Failed to flush changes:', error);
       syncStore.setSyncError(error instanceof Error ? error.message : 'Sync failed');
     } finally {
       syncStore.setSyncing(false);
@@ -245,6 +292,26 @@ class SyncService {
       this.flushTimeout = null;
     }
     this.changeQueue.clear();
+  }
+
+  /**
+   * Force immediate sync (skip debounce)
+   * Call from console: window.forceSync()
+   */
+  async forceSync(): Promise<void> {
+    if (this.flushTimeout) {
+      clearTimeout(this.flushTimeout);
+      this.flushTimeout = null;
+    }
+    console.log('[Sync] Force sync triggered');
+    await this.flushChanges();
+  }
+
+  /**
+   * Get pending changes count (for debugging)
+   */
+  getPendingCount(): number {
+    return this.changeQueue.size;
   }
 
   // Data conversion helpers
@@ -353,3 +420,30 @@ class SyncService {
 }
 
 export const syncService = new SyncService();
+
+// Expose to window for console debugging
+if (typeof window !== 'undefined') {
+  const w = window as unknown as {
+    debugSync: () => void;
+    forceSync: () => Promise<void>;
+  };
+  w.debugSync = () => syncService.debugSync();
+  w.forceSync = () => syncService.forceSync();
+
+  // Flush pending changes when page is about to close
+  window.addEventListener('beforeunload', () => {
+    if (syncService['changeQueue'].size > 0) {
+      console.log('[Sync] Page unloading, flushing pending changes...');
+      // Use sendBeacon for reliable delivery during page unload
+      syncService.flushChanges();
+    }
+  });
+
+  // Also flush when page becomes hidden (user switches tabs, minimizes, etc.)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && syncService['changeQueue'].size > 0) {
+      console.log('[Sync] Page hidden, flushing pending changes...');
+      syncService.flushChanges();
+    }
+  });
+}
