@@ -43,6 +43,7 @@ export function Learn() {
   const { isLoaded: wordsLoaded, loadWords, getWord, getWordIds, ensureWordsLoaded, cacheVersion: _cacheVersion } = useWordStore();
   const {
     isLoaded: progressLoaded,
+    progressMap,
     loadProgress,
     getNewWords,
     getWordsToReview,
@@ -57,6 +58,7 @@ export function Learn() {
     recordLearn,
     recordReview,
     recordMastered,
+    recoverStatsFromProgress,
   } = useUserStore();
   const { settings, isLoaded: settingsLoaded, loadSettings } = useSettingsStore();
 
@@ -140,6 +142,13 @@ export function Learn() {
     if (!settingsLoaded) loadSettings();
   }, [wordsLoaded, progressLoaded, userLoaded, settingsLoaded, loadWords, loadProgress, loadUser, loadSettings]);
 
+  // Recover stats from progress if needed (one-time migration)
+  useEffect(() => {
+    if (progressLoaded && userLoaded) {
+      recoverStatsFromProgress(progressMap);
+    }
+  }, [progressLoaded, userLoaded, progressMap, recoverStatsFromProgress]);
+
   // Initialize learning session - try to restore from saved session first
   useEffect(() => {
     if (wordsLoaded && progressLoaded && settingsLoaded && userLoaded && !initRef.current && !session.sessionComplete) {
@@ -149,11 +158,29 @@ export function Learn() {
 
       // Check if we have a valid saved session from today
       // Also validate that total words is reasonable (not more than 2x daily goal + 10 buffer)
+      // AND that the word IDs exist in the current word index (cache might have been invalidated)
       const maxSessionWords = stats.dailyGoal * 2 + 10;
+      const wordIds = getWordIds();
+      const wordIdSet = new Set(wordIds);
+      const sessionWordIds = savedSession ? [...savedSession.studyWords, ...savedSession.reviewWords] : [];
+      const validWordIds = sessionWordIds.filter(id => wordIdSet.has(id));
       const savedSessionValid = savedSession
         && savedSession.date === today
-        && savedSession.studyWords.length + savedSession.reviewWords.length > 0
-        && savedSession.studyWords.length + savedSession.reviewWords.length <= maxSessionWords;
+        && sessionWordIds.length > 0
+        && sessionWordIds.length <= maxSessionWords
+        && validWordIds.length === sessionWordIds.length; // All word IDs must be valid
+
+      // Debug logging
+      console.log('[Learn] Session init:', {
+        today,
+        savedSessionDate: savedSession?.date,
+        wordIdsCount: wordIds.length,
+        sessionWordIdsCount: sessionWordIds.length,
+        validWordIdsCount: validWordIds.length,
+        savedSessionValid,
+        todayLearned: stats.todayLearned,
+        dailyGoal: stats.dailyGoal,
+      });
 
       if (savedSessionValid) {
         // Restore saved session using single setState
@@ -169,14 +196,29 @@ export function Learn() {
           sessionComplete: false,
         });
       } else {
-        // Create new session
-        const wordIds = getWordIds();
+        // Create new session (wordIds already defined above for validation)
         // Calculate remaining new words for today (consider already learned today)
         const remainingNewWords = Math.max(0, stats.dailyGoal - stats.todayLearned);
         const newWords = remainingNewWords > 0 ? getNewWords(wordIds, remainingNewWords) : [];
         // Limit review words to be proportional to daily goal (max 1:1 ratio)
         const reviewLimit = Math.max(stats.dailyGoal, 10);
-        const dueWords = getWordsToReview(reviewLimit);
+        const rawDueWords = getWordsToReview(reviewLimit);
+
+        // IMPORTANT: Filter due words to only include IDs that exist in the current word index
+        // This handles the case where progressMap has old format IDs (word_X) that don't match
+        // the new word index format (A1_X)
+        const dueWords = rawDueWords.filter(id => wordIdSet.has(id));
+
+        // Debug logging
+        console.log('[Learn] Creating new session:', {
+          remainingNewWords,
+          newWordsCount: newWords.length,
+          newWordsFirst5: newWords.slice(0, 5),
+          rawDueWordsCount: rawDueWords.length,
+          dueWordsCount: dueWords.length,
+          dueWordsFirst5: dueWords.slice(0, 5),
+          filteredOut: rawDueWords.length - dueWords.length,
+        });
 
         // Mark new words as learning (only those not already marked)
         newWords.forEach((id) => startLearning(id));

@@ -5,6 +5,7 @@ import { syncService } from '../services/syncService';
 
 const STATS_KEY = 'user_stats';
 const TASKS_KEY = 'daily_tasks';
+const STATS_RECOVERY_KEY = 'stats_recovered_v1';
 
 // Achievement definitions
 const ACHIEVEMENTS: Achievement[] = [
@@ -143,6 +144,7 @@ interface UserState {
   checkStreak: () => void;
   checkAchievements: () => string[]; // Returns new achievement IDs
   setDailyGoal: (goal: number) => void;
+  recoverStatsFromProgress: (progressMap: Map<string, { reviewCount: number; status: string }>) => void;
 
   // Cloud sync actions
   setStatsFromCloud: (stats: UserStats) => void;
@@ -161,6 +163,15 @@ export const useUserStore = create<UserState>((set, get) => ({
   loadUser: () => {
     const savedStats = getItem<UserStats>(STATS_KEY, createDefaultStats());
     const today = getTodayString();
+
+    // Debug logging
+    console.log('[User] Loading stats:', {
+      lastActiveDate: savedStats.lastActiveDate,
+      today,
+      todayLearned: savedStats.todayLearned,
+      totalWords: savedStats.totalWords,
+      willReset: savedStats.lastActiveDate !== today,
+    });
 
     // Check if we need to reset daily stats
     if (savedStats.lastActiveDate !== today) {
@@ -357,6 +368,62 @@ export const useUserStore = create<UserState>((set, get) => ({
       stats: { ...stats, dailyGoal: goal },
     });
     saveUser();
+  },
+
+  recoverStatsFromProgress: (progressMap: Map<string, { reviewCount: number; status: string; lastReviewDate?: string }>) => {
+    const { stats, saveUser } = get();
+    const today = getTodayString();
+
+    // Only recover if stats seem corrupted (totalWords = 0 but we have progress)
+    const alreadyRecovered = localStorage.getItem(STATS_RECOVERY_KEY) === 'done';
+    if (alreadyRecovered || stats.totalWords > 0 || progressMap.size === 0) {
+      return;
+    }
+
+    // Count words from progress
+    let totalWords = 0;
+    let masteredWords = 0;
+    let todayLearned = 0;
+    let todayReviewed = 0;
+
+    progressMap.forEach((progress) => {
+      if (progress.reviewCount > 0) {
+        totalWords++;
+        if (progress.status === 'mastered') {
+          masteredWords++;
+        }
+
+        // Check if this word was reviewed today
+        if (progress.lastReviewDate) {
+          const reviewDate = progress.lastReviewDate.split('T')[0];
+          if (reviewDate === today) {
+            if (progress.reviewCount === 1) {
+              // First review today = new word learned today
+              todayLearned++;
+            } else {
+              // Subsequent review today
+              todayReviewed++;
+            }
+          }
+        }
+      }
+    });
+
+    if (totalWords > 0) {
+      console.log('[User] Recovering stats from progress:', { totalWords, masteredWords, todayLearned, todayReviewed });
+      set({
+        stats: {
+          ...stats,
+          totalWords,
+          masteredWords,
+          todayLearned,
+          todayReviewed,
+          lastActiveDate: today,
+        },
+      });
+      saveUser();
+      localStorage.setItem(STATS_RECOVERY_KEY, 'done');
+    }
   },
 
   getLevel: () => {

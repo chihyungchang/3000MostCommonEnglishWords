@@ -31,8 +31,21 @@ interface WordState {
   isWordLoading: (id: string) => boolean;
 }
 
-const CACHE_KEY = 'word_cache_v3'; // v3: includes meanings from Supabase
-const INDEX_CACHE_KEY = 'word_index_v3'; // v3: full 3000 words
+const CACHE_KEY = 'word_cache_v5'; // v5: validate cache has full word count
+const INDEX_CACHE_KEY = 'word_index_v5'; // v5: validate cache has full word count
+const EXPECTED_MIN_WORD_COUNT = 2900; // Minimum expected words (actual: 2951)
+
+// Clear old cache versions on module load
+function clearOldCaches() {
+  const oldKeys = ['word_cache_v3', 'word_cache_v4', 'word_index_v3', 'word_index_v4'];
+  oldKeys.forEach(key => {
+    if (localStorage.getItem(key)) {
+      console.log(`[WordStore] Clearing old cache: ${key}`);
+      localStorage.removeItem(key);
+    }
+  });
+}
+clearOldCaches();
 
 function loadLocalCache(): Map<string, Word> {
   try {
@@ -82,10 +95,13 @@ function loadIndexCache(): WordIndex[] | null {
   try {
     const cached = localStorage.getItem(INDEX_CACHE_KEY);
     if (cached) {
-      return JSON.parse(cached);
+      const parsed = JSON.parse(cached);
+      console.log(`[WordStore] Found cached index (${INDEX_CACHE_KEY}): ${parsed.length} words`);
+      return parsed;
     }
-  } catch {
-    // Ignore
+    console.log(`[WordStore] No cached index found for key: ${INDEX_CACHE_KEY}`);
+  } catch (e) {
+    console.error('[WordStore] Failed to load index cache:', e);
   }
   return null;
 }
@@ -210,17 +226,23 @@ export const useWordStore = create<WordState>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      // 1. Try localStorage cache first (instant)
+      // Strategy: Always load from JSON first (fast and reliable), then try Supabase in background
+      // This avoids cache corruption issues
+
+      // 1. Check cache for instant load (but verify it has enough words)
       const cachedIndex = loadIndexCache();
-      if (cachedIndex && cachedIndex.length > 0) {
+      const cacheValid = cachedIndex && cachedIndex.length >= EXPECTED_MIN_WORD_COUNT;
+
+      if (cacheValid) {
+        console.log(`[WordStore] Using cached index: ${cachedIndex.length} words`);
         set({
           wordIndex: cachedIndex,
           isLoaded: true,
           isLoading: false,
         });
-        // Refresh from Supabase in background (non-blocking)
+        // Still try to refresh from Supabase in background
         fetchIndexFromSupabase().then((newIndex) => {
-          if (newIndex && newIndex.length > 0) {
+          if (newIndex && newIndex.length >= EXPECTED_MIN_WORD_COUNT) {
             saveIndexCache(newIndex);
             set({ wordIndex: newIndex });
           }
@@ -228,26 +250,35 @@ export const useWordStore = create<WordState>((set, get) => ({
         return;
       }
 
-      // 2. Try Supabase (with 3s timeout)
-      const supabaseIndex = await fetchIndexFromSupabase();
-      if (supabaseIndex && supabaseIndex.length > 0) {
-        saveIndexCache(supabaseIndex);
-        set({
-          wordIndex: supabaseIndex,
-          isLoaded: true,
-          isLoading: false,
-        });
-        return;
+      // 2. Cache invalid - load from JSON directly (reliable, ~100KB)
+      if (cachedIndex) {
+        console.log(`[WordStore] Cache invalid (${cachedIndex.length} words), loading from JSON...`);
+        // Clear bad cache
+        localStorage.removeItem(INDEX_CACHE_KEY);
+      } else {
+        console.log('[WordStore] No cache, loading from JSON...');
       }
 
-      // 3. Fallback to JSON file
-      console.log('Loading word index from JSON fallback...');
       const jsonIndex = await fetchIndexFromJSON();
+      console.log(`[WordStore] Loaded ${jsonIndex.length} words from JSON`);
+
+      if (jsonIndex.length < EXPECTED_MIN_WORD_COUNT) {
+        throw new Error(`JSON has only ${jsonIndex.length} words, expected ${EXPECTED_MIN_WORD_COUNT}+`);
+      }
+
       saveIndexCache(jsonIndex);
       set({
         wordIndex: jsonIndex,
         isLoaded: true,
         isLoading: false,
+      });
+
+      // 3. Try Supabase in background (might have newer data)
+      fetchIndexFromSupabase().then((newIndex) => {
+        if (newIndex && newIndex.length >= EXPECTED_MIN_WORD_COUNT) {
+          saveIndexCache(newIndex);
+          set({ wordIndex: newIndex });
+        }
       });
     } catch (error) {
       console.error('Failed to load words:', error);
@@ -260,6 +291,13 @@ export const useWordStore = create<WordState>((set, get) => ({
   },
 
   ensureWordsLoaded: async (ids: string[]): Promise<Word[]> => {
+    console.log('[WordStore] ensureWordsLoaded called with', ids.length, 'ids:', ids.slice(0, 5));
+
+    if (ids.length === 0) {
+      console.log('[WordStore] No IDs to load');
+      return [];
+    }
+
     const currentState = get();
 
     // Check which words are being loaded by another call
@@ -267,6 +305,7 @@ export const useWordStore = create<WordState>((set, get) => ({
 
     // If some words are being loaded, wait for them
     if (loadingIds.length > 0) {
+      console.log('[WordStore] Waiting for', loadingIds.length, 'words already loading...');
       // Poll until loading completes (max 10 seconds)
       const maxWait = 10000;
       const pollInterval = 100;
@@ -277,6 +316,7 @@ export const useWordStore = create<WordState>((set, get) => ({
         const stillLoading = loadingIds.some((id) => get().loadingIds.has(id));
         if (!stillLoading) break;
       }
+      console.log('[WordStore] Finished waiting, waited', waited, 'ms');
     }
 
     // Now check which words are actually missing
@@ -285,8 +325,11 @@ export const useWordStore = create<WordState>((set, get) => ({
       return !cached;
     });
 
+    console.log('[WordStore] Missing words:', missingIds.length, 'of', ids.length);
+
     // If all words are in cache, return them
     if (missingIds.length === 0) {
+      console.log('[WordStore] All words in cache, returning');
       return ids.map((id) => get().wordCache.get(id)).filter((w): w is Word => !!w);
     }
 
@@ -296,8 +339,10 @@ export const useWordStore = create<WordState>((set, get) => ({
     set({ loadingIds: newLoadingIds });
 
     try {
+      console.log('[WordStore] Fetching from Supabase...');
       // Try Supabase first (will have meanings)
       const supabaseWords = await fetchWordsByIds(missingIds);
+      console.log('[WordStore] Supabase returned:', supabaseWords?.length || 0, 'words');
       if (supabaseWords && supabaseWords.length > 0) {
         const latestCache = new Map(get().wordCache);
         for (const word of supabaseWords) {
@@ -309,21 +354,26 @@ export const useWordStore = create<WordState>((set, get) => ({
 
       // Check which words are still completely missing after Supabase
       const stillMissing = missingIds.filter((id) => !get().wordCache.has(id));
+      console.log('[WordStore] Still missing after Supabase:', stillMissing.length);
 
       if (stillMissing.length > 0) {
         // Fallback to JSON files for missing words
         const levelsNeeded = new Set<string>();
         for (const id of stillMissing) {
-          levelsNeeded.add(id.split('_')[0]);
+          const level = id.split('_')[0];
+          if (level) levelsNeeded.add(level);
         }
+        console.log('[WordStore] Levels needed:', Array.from(levelsNeeded));
 
         for (const level of levelsNeeded) {
           try {
+            console.log(`[WordStore] Fetching /data/${level}.json...`);
             const response = await fetch(`/data/${level}.json`);
             if (!response.ok) {
-              console.warn(`Failed to fetch /data/${level}.json: ${response.status}`);
+              console.warn(`[WordStore] Failed to fetch /data/${level}.json: ${response.status}`);
               continue;
             }
+            console.log(`[WordStore] Got ${level}.json, parsing...`);
 
             const rawWords = await response.json();
             const latestCache = new Map(get().wordCache);
@@ -361,10 +411,13 @@ export const useWordStore = create<WordState>((set, get) => ({
       const finalLoadingIds = new Set(get().loadingIds);
       missingIds.forEach((id) => finalLoadingIds.delete(id));
       set({ loadingIds: finalLoadingIds });
+      console.log('[WordStore] ensureWordsLoaded finished');
     }
 
     // Return all requested words
-    return ids.map((id) => get().wordCache.get(id)).filter((w): w is Word => !!w);
+    const result = ids.map((id) => get().wordCache.get(id)).filter((w): w is Word => !!w);
+    console.log('[WordStore] Returning', result.length, 'words of', ids.length, 'requested');
+    return result;
   },
 
   isWordLoading: (id: string) => get().loadingIds.has(id),

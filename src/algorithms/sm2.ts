@@ -55,11 +55,15 @@ export function calculateNextReview(
   nextReviewDate.setDate(nextReviewDate.getDate() + interval);
   nextReviewDate.setHours(0, 0, 0, 0);
 
-  // Determine status
+  // Calculate new review count BEFORE determining status
+  const newReviewCount = reviewCount + 1;
+
+  // Determine status based on NEW review count
   let status: WordProgress['status'] = 'learning';
   if (consecutiveCorrect >= 5 && interval >= 21) {
     status = 'mastered';
-  } else if (reviewCount > 0) {
+  } else if (newReviewCount > 0) {
+    // After any review, status becomes 'reviewing'
     status = 'reviewing';
   }
 
@@ -67,7 +71,7 @@ export function calculateNextReview(
     interval,
     easeFactor,
     consecutiveCorrect,
-    reviewCount: reviewCount + 1,
+    reviewCount: newReviewCount,
     nextReviewDate: nextReviewDate.toISOString(),
     lastReviewDate: new Date().toISOString(),
     status,
