@@ -18,15 +18,17 @@ interface WordState {
   isLoaded: boolean;
   isLoading: boolean;
   error: string | null;
+  loadingIds: Set<string>; // Track which words are currently being loaded
 
   loadWords: () => Promise<void>;
   getWord: (id: string) => Word | undefined;
   getWordsByLevel: (level: string) => Word[];
   getWordIds: () => string[];
   getWordIdsByLevel: (level: string) => string[];
-  ensureWordsLoaded: (ids: string[]) => Promise<void>;
+  ensureWordsLoaded: (ids: string[]) => Promise<Word[]>;
   getTotalWordCount: () => number;
   getWordCountByLevel: (level: string) => number;
+  isWordLoading: (id: string) => boolean;
 }
 
 const CACHE_KEY = 'word_cache_v3'; // v3: includes meanings from Supabase
@@ -45,12 +47,34 @@ function loadLocalCache(): Map<string, Word> {
   return new Map();
 }
 
+// Session words that should be prioritized in localStorage cache
+let sessionWordIds: Set<string> = new Set();
+
+export function setSessionWords(ids: string[]) {
+  sessionWordIds = new Set(ids);
+}
+
 function saveLocalCache(cache: Map<string, Word>) {
   try {
-    const entries = Array.from(cache.entries()).slice(-50);
+    // Priority: session words + recent words, up to 300 total
+    const sessionEntries: [string, Word][] = [];
+    const otherEntries: [string, Word][] = [];
+
+    for (const [id, word] of cache.entries()) {
+      if (sessionWordIds.has(id)) {
+        sessionEntries.push([id, word]);
+      } else {
+        otherEntries.push([id, word]);
+      }
+    }
+
+    // Keep all session words + fill remaining space with recent words
+    const maxOther = Math.max(0, 300 - sessionEntries.length);
+    const entries = [...sessionEntries, ...otherEntries.slice(-maxOther)];
+
     localStorage.setItem(CACHE_KEY, JSON.stringify(Object.fromEntries(entries)));
   } catch {
-    // Ignore
+    // Ignore - localStorage might be full
   }
 }
 
@@ -177,6 +201,7 @@ export const useWordStore = create<WordState>((set, get) => ({
   isLoaded: false,
   isLoading: false,
   error: null,
+  loadingIds: new Set<string>(),
 
   loadWords: async () => {
     const state = get();
@@ -234,71 +259,99 @@ export const useWordStore = create<WordState>((set, get) => ({
     }
   },
 
-  ensureWordsLoaded: async (ids: string[]) => {
-    const state = get();
-    // Check for missing words OR words without meanings (stale cache)
+  ensureWordsLoaded: async (ids: string[]): Promise<Word[]> => {
+    // Filter out words that are already loaded with meanings, or currently loading
+    const currentState = get();
     const missingIds = ids.filter((id) => {
-      const cached = state.wordCache.get(id);
+      if (currentState.loadingIds.has(id)) return false; // Already loading
+      const cached = currentState.wordCache.get(id);
       return !cached || !cached.meanings;
     });
-    if (missingIds.length === 0) return;
 
-    // Try Supabase first
-    const supabaseWords = await fetchWordsByIds(missingIds);
-    if (supabaseWords && supabaseWords.length > 0) {
-      const newCache = new Map(get().wordCache);
-      for (const word of supabaseWords) {
-        newCache.set(word.id, word);
+    if (missingIds.length === 0) {
+      // Return already cached words
+      return ids.map((id) => get().wordCache.get(id)).filter((w): w is Word => !!w);
+    }
+
+    // Mark words as loading to prevent duplicate requests
+    const newLoadingIds = new Set(currentState.loadingIds);
+    missingIds.forEach((id) => newLoadingIds.add(id));
+    set({ loadingIds: newLoadingIds });
+
+    const loadedWords: Word[] = [];
+
+    try {
+      // Try Supabase first
+      const supabaseWords = await fetchWordsByIds(missingIds);
+      if (supabaseWords && supabaseWords.length > 0) {
+        // Use get() to get latest state to avoid race conditions
+        const latestCache = new Map(get().wordCache);
+        for (const word of supabaseWords) {
+          latestCache.set(word.id, word);
+          loadedWords.push(word);
+        }
+        set({ wordCache: latestCache, cacheVersion: get().cacheVersion + 1 });
+        saveLocalCache(latestCache);
       }
-      set({ wordCache: newCache, cacheVersion: get().cacheVersion + 1 });
-      saveLocalCache(newCache);
 
-      // Check if we got all words
-      const stillMissing = missingIds.filter((id) => !newCache.has(id));
-      if (stillMissing.length === 0) return;
-    }
+      // Check which words are still missing after Supabase
+      const stillMissing = missingIds.filter((id) => !get().wordCache.get(id)?.meanings);
 
-    // Fallback to JSON files for missing words
-    const levelsNeeded = new Set<string>();
-    const currentMissing = missingIds.filter((id) => !get().wordCache.has(id));
-    for (const id of currentMissing) {
-      levelsNeeded.add(id.split('_')[0]);
-    }
-
-    for (const level of levelsNeeded) {
-      try {
-        const response = await fetch(`/data/${level}.json`);
-        if (!response.ok) continue;
-
-        const rawWords = await response.json();
-        const newCache = new Map(get().wordCache);
-
-        for (let i = 0; i < rawWords.length; i++) {
-          const raw = rawWords[i];
-          const id = `${level}_${i}`;
-          if (currentMissing.includes(id)) {
-            newCache.set(id, {
-              id,
-              word: raw.word,
-              pos: raw.pos || [],
-              level: raw.level,
-              phonetic: raw.phonetic,
-              definition: raw.definition,
-              example: raw.example,
-              synonyms: raw.synonyms,
-              audioUrl: raw.audio,
-              zh: raw.zh,
-            });
-          }
+      if (stillMissing.length > 0) {
+        // Fallback to JSON files for missing words
+        const levelsNeeded = new Set<string>();
+        for (const id of stillMissing) {
+          levelsNeeded.add(id.split('_')[0]);
         }
 
-        set({ wordCache: newCache, cacheVersion: get().cacheVersion + 1 });
-        saveLocalCache(newCache);
-      } catch {
-        // Continue
+        for (const level of levelsNeeded) {
+          try {
+            const response = await fetch(`/data/${level}.json`);
+            if (!response.ok) continue;
+
+            const rawWords = await response.json();
+            const latestCache = new Map(get().wordCache);
+
+            for (let i = 0; i < rawWords.length; i++) {
+              const raw = rawWords[i];
+              const id = `${level}_${i}`;
+              if (stillMissing.includes(id) && !latestCache.get(id)?.meanings) {
+                const word: Word = {
+                  id,
+                  word: raw.word,
+                  pos: raw.pos || [],
+                  level: raw.level || level,
+                  phonetic: raw.phonetic,
+                  definition: raw.definition,
+                  example: raw.example,
+                  synonyms: raw.synonyms,
+                  audioUrl: raw.audio,
+                  zh: raw.zh,
+                };
+                latestCache.set(id, word);
+                loadedWords.push(word);
+              }
+            }
+
+            set({ wordCache: latestCache, cacheVersion: get().cacheVersion + 1 });
+            saveLocalCache(latestCache);
+          } catch (error) {
+            console.error(`Failed to load words from ${level}.json:`, error);
+          }
+        }
       }
+    } finally {
+      // Remove from loading set
+      const finalLoadingIds = new Set(get().loadingIds);
+      missingIds.forEach((id) => finalLoadingIds.delete(id));
+      set({ loadingIds: finalLoadingIds });
     }
+
+    // Return all requested words (cached + newly loaded)
+    return ids.map((id) => get().wordCache.get(id)).filter((w): w is Word => !!w);
   },
+
+  isWordLoading: (id: string) => get().loadingIds.has(id),
 
   getWord: (id: string) => get().wordCache.get(id),
 

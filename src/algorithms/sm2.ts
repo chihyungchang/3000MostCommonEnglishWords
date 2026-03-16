@@ -50,9 +50,10 @@ export function calculateNextReview(
     }
   }
 
-  // Calculate next review date
+  // Calculate next review date (set to start of day for consistent date comparison)
   const nextReviewDate = new Date();
   nextReviewDate.setDate(nextReviewDate.getDate() + interval);
+  nextReviewDate.setHours(0, 0, 0, 0);
 
   // Determine status
   let status: WordProgress['status'] = 'learning';
@@ -90,11 +91,18 @@ export function createInitialProgress(wordId: string): WordProgress {
 
 /**
  * Check if a word is due for review
+ * Compares only the date part (ignoring time) to ensure words are available
+ * for review at any time on or after the due date
  */
 export function isDueForReview(progress: WordProgress): boolean {
   const now = new Date();
   const dueDate = new Date(progress.nextReviewDate);
-  return now >= dueDate;
+
+  // Compare only year, month, and day (ignore time)
+  const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dueDateOnly = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+
+  return nowDate >= dueDateOnly;
 }
 
 /**

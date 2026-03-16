@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Trophy, Sparkles, Target, CheckCircle2, XCircle, Keyboard, MessageCircle } from 'lucide-react';
 import { WordCard, ProgressBar, ResponseButtons, AIChatDialog, SyncIndicator } from '../components';
-import { useWordStore } from '../stores/wordStore';
+import { useWordStore, setSessionWords } from '../stores/wordStore';
 import { useProgressStore } from '../stores/progressStore';
 import { useUserStore } from '../stores/userStore';
 import { useSettingsStore } from '../stores/themeStore';
@@ -90,6 +90,8 @@ export function Learn() {
   const [showAnswer, setShowAnswer] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [isChatLoading, setIsChatLoading] = useState(false);
+  const [isWordLoading, setIsWordLoading] = useState(false);
+  const [isResetting, setIsResetting] = useState(false); // Prevent flash when resetting session
   const sessionSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initRef = useRef(false);
 
@@ -204,7 +206,12 @@ export function Learn() {
   useEffect(() => {
     if (initialized && (studyWords.length > 0 || reviewWords.length > 0)) {
       const allSessionWords = [...studyWords, ...reviewWords];
-      ensureWordsLoaded(allSessionWords);
+      // Mark these words as session words to prioritize in cache
+      setSessionWords(allSessionWords);
+      setIsWordLoading(true);
+      ensureWordsLoaded(allSessionWords).finally(() => {
+        setIsWordLoading(false);
+      });
     }
   }, [initialized, studyWords, reviewWords, ensureWordsLoaded]);
 
@@ -228,6 +235,16 @@ export function Learn() {
   const currentWordList = currentPhase === 'new' ? studyWords : reviewWords;
   const currentWordId = currentWordList[currentIndex];
   const currentWord = currentWordId ? getWord(currentWordId) : undefined;
+
+  // Ensure current word is loaded when phase changes or word is missing
+  useEffect(() => {
+    if (initialized && currentWordId && !currentWord) {
+      setIsWordLoading(true);
+      ensureWordsLoaded([currentWordId]).finally(() => {
+        setIsWordLoading(false);
+      });
+    }
+  }, [initialized, currentWordId, currentWord, ensureWordsLoaded]);
 
   const handleFlip = () => {
     setShowAnswer(!showAnswer);
@@ -292,7 +309,9 @@ export function Learn() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (sessionComplete) return;
+      // Don't respond to keyboard when session is complete or word is loading
+      if (sessionComplete || !currentWord) return;
+
       if (e.code === 'Space' && !showAnswer) {
         e.preventDefault();
         setShowAnswer(true);
@@ -311,7 +330,7 @@ export function Learn() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showAnswer, sessionComplete, handleResponse]);
+  }, [showAnswer, sessionComplete, currentWord, handleResponse]);
 
   // Loading state
   if (!wordsLoaded || !progressLoaded || !userLoaded || !settingsLoaded) {
@@ -325,8 +344,8 @@ export function Learn() {
     );
   }
 
-  // No words to learn or review
-  if (studyWords.length === 0 && reviewWords.length === 0 && !sessionComplete) {
+  // No words to learn or review (but not when resetting session)
+  if (studyWords.length === 0 && reviewWords.length === 0 && !sessionComplete && !isResetting && initialized) {
     return (
       <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${isDesktop ? '' : 'pb-24'}`}>
         <div className="clay-card p-8 text-center max-w-md">
@@ -374,6 +393,7 @@ export function Learn() {
           <div className="flex gap-3">
             <button
               onClick={() => {
+                setIsResetting(true);
                 clearSession();
                 initRef.current = false;
                 setSession({
@@ -385,6 +405,8 @@ export function Learn() {
                   initialized: false,
                   sessionComplete: false,
                 });
+                // Reset flag after a tick to allow useEffect to run
+                setTimeout(() => setIsResetting(false), 0);
               }}
               className="flex-1 clay-btn py-3 font-semibold"
             >
@@ -454,10 +476,15 @@ export function Learn() {
           <div className="grid grid-cols-3 gap-8">
             {/* Word Card */}
             <div className="col-span-2">
-              {currentWord && (
+              {currentWord ? (
                 <WordCard word={currentWord} showAnswer={showAnswer} onFlip={handleFlip} size="large" />
-              )}
-              {showAnswer && (
+              ) : currentWordId && (isWordLoading || !currentWord) ? (
+                <div className="clay-card p-12 flex flex-col items-center justify-center min-h-[300px]">
+                  <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+                  <p className="mt-4 text-theme-secondary">{t('common.loading')}</p>
+                </div>
+              ) : null}
+              {showAnswer && currentWord && (
                 <div className="mt-6">
                   <ResponseButtons onResponse={handleResponse} />
                 </div>
@@ -572,12 +599,17 @@ export function Learn() {
       </header>
 
       <main className="p-4 max-w-lg mx-auto">
-        {currentWord && (
+        {currentWord ? (
           <div className="mb-6">
             <WordCard word={currentWord} showAnswer={showAnswer} onFlip={handleFlip} />
           </div>
-        )}
-        {showAnswer && (
+        ) : currentWordId && (isWordLoading || !currentWord) ? (
+          <div className="clay-card p-8 mb-6 flex flex-col items-center justify-center min-h-48">
+            <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+            <p className="mt-3 text-theme-secondary text-sm">{t('common.loading')}</p>
+          </div>
+        ) : null}
+        {showAnswer && currentWord && (
           <div className="mb-6">
             <ResponseButtons onResponse={handleResponse} />
           </div>
