@@ -7,6 +7,7 @@ import { useWordStore, setSessionWords } from '../stores/wordStore';
 import { useProgressStore } from '../stores/progressStore';
 import { useUserStore } from '../stores/userStore';
 import { useSettingsStore } from '../stores/themeStore';
+import { useSyncStore } from '../stores/syncStore';
 import { useDevice } from '../hooks/useDevice';
 import { calculateXP } from '../algorithms/sm2';
 import { getItem, setItem, removeItem, getTodayString } from '../utils/storage';
@@ -61,6 +62,7 @@ export function Learn() {
     recoverStatsFromProgress,
   } = useUserStore();
   const { settings, isLoaded: settingsLoaded, loadSettings } = useSettingsStore();
+  const { initialSyncCompleted, userId: syncUserId } = useSyncStore();
 
   // Session state - combined into single object to avoid multiple setState calls
   interface SessionState {
@@ -150,7 +152,15 @@ export function Learn() {
   }, [progressLoaded, userLoaded, progressMap, recoverStatsFromProgress]);
 
   // Initialize learning session - try to restore from saved session first
+  // IMPORTANT: Wait for initialSyncCompleted to avoid race condition with cloud sync
   useEffect(() => {
+    // If user is logged in, wait for initial sync to complete
+    const shouldWaitForSync = syncUserId && !initialSyncCompleted;
+    if (shouldWaitForSync) {
+      console.log('[Learn] Waiting for initial sync to complete...');
+      return;
+    }
+
     if (wordsLoaded && progressLoaded && settingsLoaded && userLoaded && !initRef.current && !session.sessionComplete) {
       initRef.current = true;
       const today = getTodayString();
@@ -242,7 +252,7 @@ export function Learn() {
         });
       }
     }
-  }, [wordsLoaded, progressLoaded, settingsLoaded, userLoaded, getWordIds, stats.dailyGoal, stats.todayLearned, settings.learnOrder, getNewWords, getWordsToReview, startLearning, session.sessionComplete]);
+  }, [wordsLoaded, progressLoaded, settingsLoaded, userLoaded, getWordIds, stats.dailyGoal, stats.todayLearned, settings.learnOrder, getNewWords, getWordsToReview, startLearning, session.sessionComplete, syncUserId, initialSyncCompleted]);
 
   // Load full word data for current session
   useEffect(() => {
@@ -364,13 +374,16 @@ export function Learn() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showAnswer, sessionComplete, currentWord, handleResponse]);
 
-  // Loading state
-  if (!wordsLoaded || !progressLoaded || !userLoaded || !settingsLoaded) {
+  // Loading state - also wait for initial sync if user is logged in
+  const isWaitingForSync = syncUserId && !initialSyncCompleted;
+  if (!wordsLoaded || !progressLoaded || !userLoaded || !settingsLoaded || isWaitingForSync) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="clay-card p-8 flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-          <p className="text-theme-secondary font-medium">{t('common.loading')}</p>
+          <p className="text-theme-secondary font-medium">
+            {isWaitingForSync ? t('common.syncing', '同步中...') : t('common.loading')}
+          </p>
         </div>
       </div>
     );

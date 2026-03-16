@@ -9,6 +9,7 @@ interface SyncState {
   syncError: string | null;
   isOnline: boolean;
   userId: string | null;
+  initialSyncCompleted: boolean; // True after first downloadFromCloud completes
 
   // Actions
   setSyncing: (syncing: boolean) => void;
@@ -16,6 +17,7 @@ interface SyncState {
   setSyncError: (error: string | null) => void;
   setOnline: (online: boolean) => void;
   setUserId: (userId: string | null) => void;
+  setInitialSyncCompleted: (completed: boolean) => void;
   loadSyncState: () => void;
   saveSyncState: () => void;
 }
@@ -26,12 +28,17 @@ export const useSyncStore = create<SyncState>((set, get) => ({
   syncError: null,
   isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
   userId: null,
+  initialSyncCompleted: false,
 
   setSyncing: (syncing: boolean) => {
     set({ isSyncing: syncing });
     if (!syncing) {
       get().saveSyncState();
     }
+  },
+
+  setInitialSyncCompleted: (completed: boolean) => {
+    set({ initialSyncCompleted: completed });
   },
 
   setLastSyncTime: (time: string) => {
@@ -49,7 +56,7 @@ export const useSyncStore = create<SyncState>((set, get) => ({
   },
 
   setUserId: (userId: string | null) => {
-    set({ userId });
+    set({ userId, initialSyncCompleted: !userId }); // Reset when logging in, set true when logging out
     if (userId) {
       get().loadSyncState();
     }

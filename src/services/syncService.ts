@@ -110,6 +110,8 @@ class SyncService {
       syncStore.setSyncError(error instanceof Error ? error.message : 'Sync failed');
     } finally {
       syncStore.setSyncing(false);
+      syncStore.setInitialSyncCompleted(true);
+      console.log('[Sync] Initial sync completed');
     }
   }
 
