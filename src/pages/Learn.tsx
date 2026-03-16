@@ -230,8 +230,9 @@ export function Learn() {
           filteredOut: rawDueWords.length - dueWords.length,
         });
 
-        // Mark new words as learning (only those not already marked)
-        newWords.forEach((id) => startLearning(id));
+        // NOTE: Don't batch mark all words as learning here
+        // Instead, mark each word as learning when it's actually shown to the user
+        // This is handled in a separate useEffect below
 
         // Set initial phase based on settings
         let initialPhase: LearningPhase = 'new';
@@ -252,7 +253,7 @@ export function Learn() {
         });
       }
     }
-  }, [wordsLoaded, progressLoaded, settingsLoaded, userLoaded, getWordIds, stats.dailyGoal, stats.todayLearned, settings.learnOrder, getNewWords, getWordsToReview, startLearning, session.sessionComplete, syncUserId, initialSyncCompleted]);
+  }, [wordsLoaded, progressLoaded, settingsLoaded, userLoaded, getWordIds, stats.dailyGoal, stats.todayLearned, settings.learnOrder, getNewWords, getWordsToReview, session.sessionComplete, syncUserId, initialSyncCompleted]);
 
   // Load full word data for current session
   useEffect(() => {
@@ -266,6 +267,14 @@ export function Learn() {
       });
     }
   }, [initialized, studyWords, reviewWords, ensureWordsLoaded]);
+
+  // Mark current new word as "learning" when shown to user
+  // This ensures only words actually seen by user are marked, not entire batch
+  useEffect(() => {
+    if (initialized && currentPhase === 'new' && currentWordId) {
+      startLearning(currentWordId);
+    }
+  }, [initialized, currentPhase, currentWordId, startLearning]);
 
   // Save session whenever relevant state changes
   useEffect(() => {

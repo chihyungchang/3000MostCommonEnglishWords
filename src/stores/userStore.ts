@@ -242,14 +242,31 @@ export const useUserStore = create<UserState>((set, get) => ({
     const { stats, dailyTasks, saveUser } = get();
     const today = getTodayString();
 
+    // Calculate new streak - only increment when user actually learns
+    let newStreak = stats.streak;
+    if (stats.lastActiveDate !== today) {
+      // First activity of the day
+      if (isYesterday(stats.lastActiveDate)) {
+        // Consecutive day - increment streak
+        newStreak = stats.streak + 1;
+      } else if (!stats.lastActiveDate) {
+        // First time ever - start streak at 1
+        newStreak = 1;
+      }
+      // If lastActiveDate exists but isn't yesterday, streak was already reset to 0 in checkStreak
+    }
+
     const newStats = {
       ...stats,
       totalWords: stats.totalWords + 1,
       todayLearned: stats.todayLearned + 1,
       lastActiveDate: today,
+      streak: newStreak,
+      longestStreak: Math.max(stats.longestStreak, newStreak),
     };
 
-    // Update daily task
+    // Update daily tasks (learn task + streak task if first activity today)
+    const isFirstActivityToday = stats.lastActiveDate !== today;
     const newTasks = dailyTasks.map((task) => {
       if (task.id === 'learn' && !task.completed) {
         const newCurrent = task.current + 1;
@@ -258,6 +275,10 @@ export const useUserStore = create<UserState>((set, get) => ({
           current: newCurrent,
           completed: newCurrent >= task.target,
         };
+      }
+      // Mark streak task as completed on first activity of the day
+      if (task.id === 'streak' && isFirstActivityToday) {
+        return { ...task, current: 1, completed: true };
       }
       return task;
     });
@@ -270,13 +291,30 @@ export const useUserStore = create<UserState>((set, get) => ({
     const { stats, dailyTasks, saveUser } = get();
     const today = getTodayString();
 
+    // Calculate new streak - only increment when user actually reviews
+    let newStreak = stats.streak;
+    if (stats.lastActiveDate !== today) {
+      // First activity of the day
+      if (isYesterday(stats.lastActiveDate)) {
+        // Consecutive day - increment streak
+        newStreak = stats.streak + 1;
+      } else if (!stats.lastActiveDate) {
+        // First time ever - start streak at 1
+        newStreak = 1;
+      }
+      // If lastActiveDate exists but isn't yesterday, streak was already reset to 0 in checkStreak
+    }
+
     const newStats = {
       ...stats,
       todayReviewed: stats.todayReviewed + 1,
       lastActiveDate: today,
+      streak: newStreak,
+      longestStreak: Math.max(stats.longestStreak, newStreak),
     };
 
-    // Update daily task
+    // Update daily tasks (review task + streak task if first activity today)
+    const isFirstActivityToday = stats.lastActiveDate !== today;
     const newTasks = dailyTasks.map((task) => {
       if (task.id === 'review' && !task.completed) {
         const newCurrent = task.current + 1;
@@ -285,6 +323,10 @@ export const useUserStore = create<UserState>((set, get) => ({
           current: newCurrent,
           completed: newCurrent >= task.target,
         };
+      }
+      // Mark streak task as completed on first activity of the day
+      if (task.id === 'streak' && isFirstActivityToday) {
+        return { ...task, current: 1, completed: true };
       }
       return task;
     });
@@ -307,7 +349,6 @@ export const useUserStore = create<UserState>((set, get) => ({
   checkStreak: () => {
     const { stats, dailyTasks, saveUser } = get();
     const today = getTodayString();
-    let newStreak = stats.streak;
 
     if (stats.lastActiveDate === today) {
       // Already active today, check streak task
@@ -318,22 +359,14 @@ export const useUserStore = create<UserState>((set, get) => ({
         return task;
       });
       set({ dailyTasks: newTasks });
-    } else if (isYesterday(stats.lastActiveDate)) {
-      // Consecutive day
-      newStreak = stats.streak + 1;
-    } else if (stats.lastActiveDate && !isToday(stats.lastActiveDate)) {
-      // Streak broken
-      newStreak = 0;
+    } else if (stats.lastActiveDate && !isYesterday(stats.lastActiveDate) && !isToday(stats.lastActiveDate)) {
+      // Streak broken - user missed more than one day
+      // Reset streak to 0, but don't save until user actually does something
+      set({ stats: { ...stats, streak: 0 } });
+      saveUser();
     }
-
-    const newStats = {
-      ...stats,
-      streak: newStreak,
-      longestStreak: Math.max(stats.longestStreak, newStreak),
-    };
-
-    set({ stats: newStats });
-    saveUser();
+    // Note: Streak is NOT incremented here - it's incremented in recordLearn/recordReview
+    // when the user actually does something on a new consecutive day
   },
 
   checkAchievements: () => {

@@ -11,7 +11,7 @@ export function Stats() {
   const { t } = useTranslation();
   const { isDesktop } = useDevice();
   const { isLoaded: wordsLoaded, loadWords, getTotalWordCount, getWordCountByLevel } = useWordStore();
-  const { isLoaded: progressLoaded, loadProgress, getStats } = useProgressStore();
+  const { isLoaded: progressLoaded, loadProgress, getStats, getLearnedCountByLevel } = useProgressStore();
   const { stats: userStats, isLoaded: userLoaded, loadUser } = useUserStore();
 
   useEffect(() => {
@@ -114,15 +114,17 @@ export function Stats() {
                 <div className="grid grid-cols-2 gap-4">
                   {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map((level) => {
                     const levelWordCount = getWordCountByLevel(level);
+                    const learnedCount = getLearnedCountByLevel(level);
+                    const percentage = levelWordCount > 0 ? Math.round((learnedCount / levelWordCount) * 100) : 0;
                     const config = levelConfig[level];
                     return (
                       <div key={level} className={`clay-card p-4 ${config.bg}`}>
                         <div className="flex justify-between items-center mb-3">
                           <span className="text-lg font-bold text-theme-primary">{level}</span>
-                          <span className="text-sm text-theme-secondary font-medium">{levelWordCount} {t('settings.words')}</span>
+                          <span className="text-sm text-theme-secondary font-medium">{learnedCount}/{levelWordCount}</span>
                         </div>
                         <div className="clay-progress h-3">
-                          <div className={`clay-progress-bar bg-linear-to-r ${config.gradient} h-3`} style={{ width: '0%' }} />
+                          <div className={`clay-progress-bar bg-linear-to-r ${config.gradient} h-3`} style={{ width: `${percentage}%` }} />
                         </div>
                       </div>
                     );
@@ -256,15 +258,17 @@ export function Stats() {
           <div className="space-y-3">
             {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map((level) => {
               const levelWordCount = getWordCountByLevel(level);
+              const learnedCount = getLearnedCountByLevel(level);
+              const percentage = levelWordCount > 0 ? Math.round((learnedCount / levelWordCount) * 100) : 0;
               const config = levelConfig[level];
               return (
                 <div key={level}>
                   <div className="flex justify-between text-sm mb-2">
                     <span className="font-bold text-theme-primary">{level}</span>
-                    <span className="text-theme-secondary">{levelWordCount} {t('settings.words')}</span>
+                    <span className="text-theme-secondary">{learnedCount}/{levelWordCount}</span>
                   </div>
                   <div className="clay-progress h-2">
-                    <div className={`clay-progress-bar bg-linear-to-r ${config.gradient} h-2`} style={{ width: '0%' }} />
+                    <div className={`clay-progress-bar bg-linear-to-r ${config.gradient} h-2`} style={{ width: `${percentage}%` }} />
                   </div>
                 </div>
               );

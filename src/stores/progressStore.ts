@@ -98,6 +98,7 @@ interface ProgressState {
     learning: number;
     reviewing: number;
   };
+  getLearnedCountByLevel: (level: string) => number;
 }
 
 export const useProgressStore = create<ProgressState>((set, get) => ({
@@ -236,5 +237,18 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       learning,
       reviewing,
     };
+  },
+
+  // Get learned word count by CEFR level
+  getLearnedCountByLevel: (level: string) => {
+    const { progressMap } = get();
+    let count = 0;
+    progressMap.forEach((progress, wordId) => {
+      // Word ID format: LEVEL_INDEX (e.g., A1_0, B2_15)
+      if (wordId.startsWith(level + '_') && progress.reviewCount > 0) {
+        count++;
+      }
+    });
+    return count;
   },
 }));

@@ -76,8 +76,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (event === 'SIGNED_OUT') {
-        syncService.setUserId(null);
+        // Note: flushChanges should have been called before signOut
+        // This is just cleanup in case it wasn't
         syncService.cancelPendingChanges();
+        syncService.setUserId(null);
       }
     });
 
@@ -108,6 +110,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    // Flush any pending changes before signing out to prevent data loss
+    try {
+      await syncService.flushChanges();
+    } catch (e) {
+      console.error('Failed to flush changes before sign out:', e);
+    }
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   }, []);

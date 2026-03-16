@@ -21,16 +21,76 @@ type UserStatsRow = Database['public']['Tables']['user_stats']['Row'];
 type UserSettingsInsert = Database['public']['Tables']['user_settings']['Insert'];
 type UserSettingsRow = Database['public']['Tables']['user_settings']['Row'];
 
+const PENDING_CHANGES_KEY = 'vocab_pending_sync';
+
 class SyncService {
   private changeQueue: Map<string, PendingChange> = new Map();
   private flushTimeout: ReturnType<typeof setTimeout> | null = null;
-  private readonly DEBOUNCE_MS = 2000;
+  private readonly DEBOUNCE_MS = 1000; // Reduced from 2000ms for faster sync
   private currentUserId: string | null = null;
 
   setUserId(userId: string | null) {
     console.log('[Sync] setUserId:', userId ? `${userId.substring(0, 8)}...` : 'null');
     this.currentUserId = userId;
     useSyncStore.getState().setUserId(userId);
+
+    // If user logged in, check for and retry any pending changes from localStorage
+    if (userId) {
+      this.retryPendingChangesFromStorage();
+    }
+  }
+
+  /**
+   * Save pending changes to localStorage as backup (for page close/crash recovery)
+   */
+  private savePendingToStorage(): void {
+    if (this.changeQueue.size === 0) {
+      localStorage.removeItem(PENDING_CHANGES_KEY);
+      return;
+    }
+    try {
+      const pending = {
+        userId: this.currentUserId,
+        changes: Array.from(this.changeQueue.entries()),
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(PENDING_CHANGES_KEY, JSON.stringify(pending));
+    } catch {
+      // Ignore localStorage errors
+    }
+  }
+
+  /**
+   * Retry pending changes that were saved to localStorage (from previous session)
+   */
+  private async retryPendingChangesFromStorage(): Promise<void> {
+    try {
+      const saved = localStorage.getItem(PENDING_CHANGES_KEY);
+      if (!saved) return;
+
+      const pending = JSON.parse(saved);
+      // Only retry if same user and changes are less than 24 hours old
+      const savedAt = new Date(pending.savedAt);
+      const hoursSinceSave = (Date.now() - savedAt.getTime()) / (1000 * 60 * 60);
+
+      if (pending.userId === this.currentUserId && hoursSinceSave < 24 && pending.changes?.length > 0) {
+        console.log(`[Sync] Found ${pending.changes.length} pending changes from previous session, retrying...`);
+
+        // Restore changes to queue
+        for (const [key, value] of pending.changes) {
+          this.changeQueue.set(key, value);
+        }
+
+        // Clear storage and flush
+        localStorage.removeItem(PENDING_CHANGES_KEY);
+        await this.flushChanges();
+      } else {
+        // Old or different user's data, just clear it
+        localStorage.removeItem(PENDING_CHANGES_KEY);
+      }
+    } catch {
+      localStorage.removeItem(PENDING_CHANGES_KEY);
+    }
   }
 
   /**
@@ -189,6 +249,8 @@ class SyncService {
       timestamp: new Date().toISOString(),
     });
 
+    // Save to localStorage as backup in case page closes before flush
+    this.savePendingToStorage();
     this.scheduleFlush();
   }
 
@@ -277,9 +339,13 @@ class SyncService {
 
       console.log('[Sync] ✓ Changes synced successfully');
       syncStore.setLastSyncTime(new Date().toISOString());
+      // Clear localStorage backup after successful sync
+      localStorage.removeItem(PENDING_CHANGES_KEY);
     } catch (error) {
       console.error('[Sync] ✗ Failed to flush changes:', error);
       syncStore.setSyncError(error instanceof Error ? error.message : 'Sync failed');
+      // Re-save pending changes to localStorage for retry on next session
+      this.savePendingToStorage();
     } finally {
       syncStore.setSyncing(false);
     }
