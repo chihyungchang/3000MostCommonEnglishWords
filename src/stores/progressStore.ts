@@ -98,7 +98,7 @@ interface ProgressState {
     learning: number;
     reviewing: number;
   };
-  getLearnedCountByLevel: (level: string) => number;
+  getLearnedCountByLevel: (level: string, wordIdsByLevel?: string[]) => number;
 }
 
 export const useProgressStore = create<ProgressState>((set, get) => ({
@@ -240,15 +240,27 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   },
 
   // Get learned word count by CEFR level
-  getLearnedCountByLevel: (level: string) => {
+  // Accepts wordIds array from wordStore to correctly map words to levels
+  getLearnedCountByLevel: (level: string, wordIdsByLevel?: string[]) => {
     const { progressMap } = get();
     let count = 0;
-    progressMap.forEach((progress, wordId) => {
-      // Word ID format: LEVEL_INDEX (e.g., A1_0, B2_15)
-      if (wordId.startsWith(level + '_') && progress.reviewCount > 0) {
-        count++;
+
+    if (wordIdsByLevel && wordIdsByLevel.length > 0) {
+      // Use provided word IDs (more reliable)
+      for (const wordId of wordIdsByLevel) {
+        const progress = progressMap.get(wordId);
+        if (progress && progress.reviewCount > 0) {
+          count++;
+        }
       }
-    });
+    } else {
+      // Fallback: check by wordId prefix
+      progressMap.forEach((progress, wordId) => {
+        if (wordId.startsWith(level + '_') && progress.reviewCount > 0) {
+          count++;
+        }
+      });
+    }
     return count;
   },
 }));

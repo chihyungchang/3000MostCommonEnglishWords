@@ -10,7 +10,7 @@ import { useDevice } from '../hooks/useDevice';
 export function Stats() {
   const { t } = useTranslation();
   const { isDesktop } = useDevice();
-  const { isLoaded: wordsLoaded, loadWords, getTotalWordCount, getWordCountByLevel } = useWordStore();
+  const { isLoaded: wordsLoaded, loadWords, getTotalWordCount, getWordCountByLevel, getWordIdsByLevel } = useWordStore();
   const { isLoaded: progressLoaded, loadProgress, getStats, getLearnedCountByLevel } = useProgressStore();
   const { stats: userStats, isLoaded: userLoaded, loadUser } = useUserStore();
 
@@ -112,9 +112,10 @@ export function Stats() {
               <div className="clay-card p-8">
                 <h3 className="text-lg font-semibold text-theme-primary mb-6">CEFR Levels</h3>
                 <div className="grid grid-cols-2 gap-4">
-                  {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map((level) => {
-                    const levelWordCount = getWordCountByLevel(level);
-                    const learnedCount = getLearnedCountByLevel(level);
+                  {['A1', 'A2', 'B1', 'B2'].filter(level => getWordCountByLevel(level) > 0).map((level) => {
+                    const levelWordIds = getWordIdsByLevel(level);
+                    const levelWordCount = levelWordIds.length;
+                    const learnedCount = getLearnedCountByLevel(level, levelWordIds);
                     const percentage = levelWordCount > 0 ? Math.round((learnedCount / levelWordCount) * 100) : 0;
                     const config = levelConfig[level];
                     return (
@@ -256,9 +257,10 @@ export function Stats() {
         <div className="clay-card p-6">
           <h3 className="font-semibold text-theme-primary mb-4">CEFR Levels</h3>
           <div className="space-y-3">
-            {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map((level) => {
-              const levelWordCount = getWordCountByLevel(level);
-              const learnedCount = getLearnedCountByLevel(level);
+            {['A1', 'A2', 'B1', 'B2'].filter(level => getWordCountByLevel(level) > 0).map((level) => {
+              const levelWordIds = getWordIdsByLevel(level);
+              const levelWordCount = levelWordIds.length;
+              const learnedCount = getLearnedCountByLevel(level, levelWordIds);
               const percentage = levelWordCount > 0 ? Math.round((learnedCount / levelWordCount) * 100) : 0;
               const config = levelConfig[level];
               return (

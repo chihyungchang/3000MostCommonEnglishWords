@@ -268,6 +268,11 @@ export function Learn() {
     }
   }, [initialized, studyWords, reviewWords, ensureWordsLoaded]);
 
+  // Get current word list and word
+  const currentWordList = currentPhase === 'new' ? studyWords : reviewWords;
+  const currentWordId = currentWordList[currentIndex];
+  const currentWord = currentWordId ? getWord(currentWordId) : undefined;
+
   // Mark current new word as "learning" when shown to user
   // This ensures only words actually seen by user are marked, not entire batch
   useEffect(() => {
@@ -291,11 +296,6 @@ export function Learn() {
       }
     };
   }, []);
-
-  // Get current word list and word
-  const currentWordList = currentPhase === 'new' ? studyWords : reviewWords;
-  const currentWordId = currentWordList[currentIndex];
-  const currentWord = currentWordId ? getWord(currentWordId) : undefined;
 
   const handleFlip = () => {
     setShowAnswer(!showAnswer);
