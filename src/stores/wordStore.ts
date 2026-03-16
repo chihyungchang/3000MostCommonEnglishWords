@@ -260,16 +260,17 @@ export const useWordStore = create<WordState>((set, get) => ({
   },
 
   ensureWordsLoaded: async (ids: string[]): Promise<Word[]> => {
-    // Filter out words that are already loaded with meanings, or currently loading
     const currentState = get();
+
+    // First, check which words are completely missing (not in cache at all)
     const missingIds = ids.filter((id) => {
       if (currentState.loadingIds.has(id)) return false; // Already loading
       const cached = currentState.wordCache.get(id);
-      return !cached || !cached.meanings;
+      return !cached; // Only check if word exists, not if it has meanings
     });
 
+    // If all words are in cache (or loading), return what we have
     if (missingIds.length === 0) {
-      // Return already cached words
       return ids.map((id) => get().wordCache.get(id)).filter((w): w is Word => !!w);
     }
 
@@ -278,24 +279,20 @@ export const useWordStore = create<WordState>((set, get) => ({
     missingIds.forEach((id) => newLoadingIds.add(id));
     set({ loadingIds: newLoadingIds });
 
-    const loadedWords: Word[] = [];
-
     try {
-      // Try Supabase first
+      // Try Supabase first (will have meanings)
       const supabaseWords = await fetchWordsByIds(missingIds);
       if (supabaseWords && supabaseWords.length > 0) {
-        // Use get() to get latest state to avoid race conditions
         const latestCache = new Map(get().wordCache);
         for (const word of supabaseWords) {
           latestCache.set(word.id, word);
-          loadedWords.push(word);
         }
         set({ wordCache: latestCache, cacheVersion: get().cacheVersion + 1 });
         saveLocalCache(latestCache);
       }
 
-      // Check which words are still missing after Supabase
-      const stillMissing = missingIds.filter((id) => !get().wordCache.get(id)?.meanings);
+      // Check which words are still completely missing after Supabase
+      const stillMissing = missingIds.filter((id) => !get().wordCache.has(id));
 
       if (stillMissing.length > 0) {
         // Fallback to JSON files for missing words
@@ -307,7 +304,10 @@ export const useWordStore = create<WordState>((set, get) => ({
         for (const level of levelsNeeded) {
           try {
             const response = await fetch(`/data/${level}.json`);
-            if (!response.ok) continue;
+            if (!response.ok) {
+              console.warn(`Failed to fetch /data/${level}.json: ${response.status}`);
+              continue;
+            }
 
             const rawWords = await response.json();
             const latestCache = new Map(get().wordCache);
@@ -315,7 +315,8 @@ export const useWordStore = create<WordState>((set, get) => ({
             for (let i = 0; i < rawWords.length; i++) {
               const raw = rawWords[i];
               const id = `${level}_${i}`;
-              if (stillMissing.includes(id) && !latestCache.get(id)?.meanings) {
+              // Only add if still missing
+              if (stillMissing.includes(id) && !latestCache.has(id)) {
                 const word: Word = {
                   id,
                   word: raw.word,
@@ -329,7 +330,6 @@ export const useWordStore = create<WordState>((set, get) => ({
                   zh: raw.zh,
                 };
                 latestCache.set(id, word);
-                loadedWords.push(word);
               }
             }
 
@@ -347,7 +347,7 @@ export const useWordStore = create<WordState>((set, get) => ({
       set({ loadingIds: finalLoadingIds });
     }
 
-    // Return all requested words (cached + newly loaded)
+    // Return all requested words
     return ids.map((id) => get().wordCache.get(id)).filter((w): w is Word => !!w);
   },
 
