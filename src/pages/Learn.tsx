@@ -210,9 +210,9 @@ export function Learn() {
         // Calculate remaining new words for today (consider already learned today)
         const remainingNewWords = Math.max(0, stats.dailyGoal - stats.todayLearned);
         const newWords = remainingNewWords > 0 ? getNewWords(wordIds, remainingNewWords) : [];
-        // Limit review words to be proportional to daily goal (max 1:1 ratio)
-        const reviewLimit = Math.max(stats.dailyGoal, 10);
-        const rawDueWords = getWordsToReview(reviewLimit);
+        // Get ALL due words - review count should be dynamic based on what's actually due
+        // No artificial limit - if 50 words are due, user should review all 50
+        const rawDueWords = getWordsToReview(500); // High limit to get all due words
 
         // IMPORTANT: Filter due words to only include IDs that exist in the current word index
         // This handles the case where progressMap has old format IDs (word_X) that don't match
