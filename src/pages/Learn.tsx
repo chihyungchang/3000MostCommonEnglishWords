@@ -236,16 +236,6 @@ export function Learn() {
   const currentWordId = currentWordList[currentIndex];
   const currentWord = currentWordId ? getWord(currentWordId) : undefined;
 
-  // Ensure current word is loaded when phase changes or word is missing
-  useEffect(() => {
-    if (initialized && currentWordId && !currentWord) {
-      setIsWordLoading(true);
-      ensureWordsLoaded([currentWordId]).finally(() => {
-        setIsWordLoading(false);
-      });
-    }
-  }, [initialized, currentWordId, currentWord, ensureWordsLoaded]);
-
   const handleFlip = () => {
     setShowAnswer(!showAnswer);
   };

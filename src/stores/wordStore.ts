@@ -262,14 +262,30 @@ export const useWordStore = create<WordState>((set, get) => ({
   ensureWordsLoaded: async (ids: string[]): Promise<Word[]> => {
     const currentState = get();
 
-    // First, check which words are completely missing (not in cache at all)
+    // Check which words are being loaded by another call
+    const loadingIds = ids.filter((id) => currentState.loadingIds.has(id));
+
+    // If some words are being loaded, wait for them
+    if (loadingIds.length > 0) {
+      // Poll until loading completes (max 10 seconds)
+      const maxWait = 10000;
+      const pollInterval = 100;
+      let waited = 0;
+      while (waited < maxWait) {
+        await new Promise((resolve) => setTimeout(resolve, pollInterval));
+        waited += pollInterval;
+        const stillLoading = loadingIds.some((id) => get().loadingIds.has(id));
+        if (!stillLoading) break;
+      }
+    }
+
+    // Now check which words are actually missing
     const missingIds = ids.filter((id) => {
-      if (currentState.loadingIds.has(id)) return false; // Already loading
-      const cached = currentState.wordCache.get(id);
-      return !cached; // Only check if word exists, not if it has meanings
+      const cached = get().wordCache.get(id);
+      return !cached;
     });
 
-    // If all words are in cache (or loading), return what we have
+    // If all words are in cache, return them
     if (missingIds.length === 0) {
       return ids.map((id) => get().wordCache.get(id)).filter((w): w is Word => !!w);
     }
