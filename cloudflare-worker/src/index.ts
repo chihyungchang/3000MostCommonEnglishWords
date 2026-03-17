@@ -11,6 +11,8 @@ export interface Env {
   TTS_CACHE: R2Bucket;
   SUPABASE_URL: string;
   SUPABASE_SERVICE_KEY: string;
+  YOUDAO_APP_KEY: string;
+  YOUDAO_APP_SECRET: string;
 }
 
 const corsHeaders = {
@@ -32,20 +34,6 @@ const langMap: Record<string, string> = {
   ms: "Bahasa Melayu",
 };
 
-// m2m100 translation model language codes
-const m2mLangCode: Record<string, string> = {
-  zh: "zh",
-  en: "en",
-  ja: "ja",
-  ko: "ko",
-  es: "es",
-  de: "de",
-  pt: "pt",
-  ru: "ru",
-  ar: "ar",
-  ms: "ms",
-};
-
 function handleOptions(): Response {
   return new Response(null, { headers: corsHeaders });
 }
@@ -63,6 +51,92 @@ function getSupabaseClient(env: Env): SupabaseClient | null {
     return null;
   }
   return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY);
+}
+
+// Youdao Dictionary API
+async function generateYoudaoSign(
+  appKey: string,
+  appSecret: string,
+  query: string,
+  salt: string,
+  curtime: string,
+): Promise<string> {
+  const input =
+    query.length > 20
+      ? query.slice(0, 10) + query.length + query.slice(-10)
+      : query;
+  const signStr = appKey + input + salt + curtime + appSecret;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(signStr);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+interface YoudaoResponse {
+  errorCode: string;
+  translation?: string[];
+  basic?: {
+    phonetic?: string;
+    "uk-phonetic"?: string;
+    "us-phonetic"?: string;
+    explains?: string[];
+  };
+  web?: Array<{ key: string; value: string[] }>;
+}
+
+async function lookupYoudao(
+  word: string,
+  env: Env,
+): Promise<{ definition: string; phonetic?: string } | null> {
+  if (!env.YOUDAO_APP_KEY || !env.YOUDAO_APP_SECRET) {
+    console.log("Youdao API credentials not configured");
+    return null;
+  }
+
+  const salt = crypto.randomUUID();
+  const curtime = Math.floor(Date.now() / 1000).toString();
+  const sign = await generateYoudaoSign(
+    env.YOUDAO_APP_KEY,
+    env.YOUDAO_APP_SECRET,
+    word,
+    salt,
+    curtime,
+  );
+
+  const params = new URLSearchParams({
+    q: word,
+    from: "en",
+    to: "zh-CHS",
+    appKey: env.YOUDAO_APP_KEY,
+    salt,
+    sign,
+    signType: "v3",
+    curtime,
+  });
+
+  const response = await fetch(
+    `https://openapi.youdao.com/api?${params.toString()}`,
+  );
+  const data = (await response.json()) as YoudaoResponse;
+
+  if (data.errorCode !== "0") {
+    console.error("Youdao API error:", data.errorCode);
+    return null;
+  }
+
+  // Prefer basic.explains (detailed definitions), fallback to translation
+  let definition = "";
+  if (data.basic?.explains && data.basic.explains.length > 0) {
+    definition = data.basic.explains.join("；");
+  } else if (data.translation && data.translation.length > 0) {
+    definition = data.translation[0];
+  }
+
+  return {
+    definition,
+    phonetic: data.basic?.["us-phonetic"] || data.basic?.phonetic,
+  };
 }
 
 // Generate TTS cache key using SHA-256 hash
@@ -324,20 +398,18 @@ Rules:
       parsed = {};
     }
 
-    // 3.5 Translate word using dedicated translation model
-    const targetCode = m2mLangCode[targetLang] || "zh";
+    // 3.5 Get definition from Youdao Dictionary API
     try {
-      const translationResponse = (await env.AI.run("@cf/meta/m2m100-1.2b", {
-        text: normalizedWord,
-        source_lang: "en",
-        target_lang: targetCode,
-      })) as { translated_text?: string };
-
-      if (translationResponse.translated_text) {
-        parsed.definition = translationResponse.translated_text;
+      const youdaoResult = await lookupYoudao(normalizedWord, env);
+      if (youdaoResult?.definition) {
+        parsed.definition = youdaoResult.definition;
+        // Use Youdao phonetic if LLaMA didn't provide one
+        if (!parsed.phonetic && youdaoResult.phonetic) {
+          parsed.phonetic = `/${youdaoResult.phonetic}/`;
+        }
       }
     } catch (err) {
-      console.error("Translation error:", err);
+      console.error("Youdao API error:", err);
       parsed.definition = normalizedWord; // Fallback to original word
     }
 

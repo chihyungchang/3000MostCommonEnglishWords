@@ -14,4 +14,7 @@ bucket_name = "vocab-tts-cache"
 # Environment variables
 [vars]
 SUPABASE_URL = "https://aurfktfcvfzjhxhmumvy.supabase.co"
-# Note: SUPABASE_SERVICE_KEY should be added via: wrangler secret put SUPABASE_SERVICE_KEY
+# Note: Secrets should be added via wrangler secret put:
+#   wrangler secret put SUPABASE_SERVICE_KEY
+#   wrangler secret put YOUDAO_APP_KEY
+#   wrangler secret put YOUDAO_APP_SECRET
