@@ -121,7 +121,7 @@ async function lookupYoudao(
   const data = (await response.json()) as YoudaoResponse;
 
   if (data.errorCode !== "0") {
-    console.error("Youdao API error:", data.errorCode);
+    console.error("Youdao API error code:", data.errorCode);
     return null;
   }
 
@@ -407,6 +407,9 @@ Rules:
         if (!parsed.phonetic && youdaoResult.phonetic) {
           parsed.phonetic = `/${youdaoResult.phonetic}/`;
         }
+      } else {
+        // Youdao API not configured or no result, use original word as fallback
+        parsed.definition = normalizedWord;
       }
     } catch (err) {
       console.error("Youdao API error:", err);
