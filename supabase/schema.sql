@@ -257,6 +257,7 @@ CREATE TABLE IF NOT EXISTS public.words (
   synonyms TEXT[] DEFAULT '{}',
   audio TEXT,
   zh TEXT,  -- Chinese translation
+  meanings JSONB DEFAULT '[]'::jsonb,  -- Full dictionary meanings with definitions, examples, synonyms, antonyms
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
