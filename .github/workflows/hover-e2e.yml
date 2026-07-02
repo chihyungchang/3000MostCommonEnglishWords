@@ -14,6 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BASE_URL: http://localhost:5173
+      # The app needs its real backend in CI — without these, Supabase calls
+      # hit a placeholder URL and the UI never gets past its loading state.
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      VITE_AI_WORKER_URL: ${{ secrets.VITE_AI_WORKER_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
