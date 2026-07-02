@@ -16,19 +16,18 @@ jobs:
       BASE_URL: http://localhost:5173
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
       - name: Start the app
-        run: pnpm run dev &
+        run: npm run dev &
       - name: Wait for the app
         run: npx --yes wait-on "$BASE_URL" --timeout 120000
       - name: Run Playwright specs
-        run: pnpm exec playwright test __vibe_tests__ --reporter=html,json
+        run: npx playwright test __vibe_tests__ --reporter=html,json
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: hover-results.json
       - name: Report the run to Hover Cloud
