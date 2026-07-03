@@ -13,6 +13,8 @@ on:
         options:
           - local
           - production
+  schedule:
+    - cron: '0 * * * *'   # scheduled monitoring (production)
 # Cancel a superseded run when new commits land on the same ref.
 concurrency:
   group: hover-e2e-${{ github.ref }}
@@ -23,9 +25,9 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    environment: ${{ github.event.inputs.environment || (github.event_name == 'schedule' && 'local' || '') || 'local' }}
+    environment: ${{ github.event.inputs.environment || (github.event_name == 'schedule' && 'production' || '') || 'local' }}
     env:
-      HOVER_ENV: ${{ github.event.inputs.environment || (github.event_name == 'schedule' && 'local' || '') || 'local' }}
+      HOVER_ENV: ${{ github.event.inputs.environment || (github.event_name == 'schedule' && 'production' || '') || 'local' }}
       BASE_URL: ${{ vars.HOVER_BASE_URL || 'http://localhost:5173' }}
     steps:
       - uses: actions/checkout@v4
