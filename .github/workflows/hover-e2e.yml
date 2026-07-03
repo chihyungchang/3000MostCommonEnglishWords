@@ -4,6 +4,10 @@
 name: Hover E2E
 on:
   pull_request:
+  # Manual runs (the Actions "Run workflow" button, or Run now in Hover
+  # Cloud) let you pick WHERE the specs run. "local" boots the app inside
+  # this runner; the other options point the same specs at that GitHub
+  # Environment's HOVER_BASE_URL.
   workflow_dispatch:
     inputs:
       environment:
@@ -13,8 +17,6 @@ on:
         options:
           - local
           - production
-  schedule:
-    - cron: '0 * * * *'   # scheduled monitoring (production)
 # Cancel a superseded run when new commits land on the same ref.
 concurrency:
   group: hover-e2e-${{ github.ref }}
@@ -25,9 +27,13 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    environment: ${{ github.event.inputs.environment || (github.event_name == 'schedule' && 'production' || '') || 'local' }}
+      statuses: write
+    # Binds the GitHub Environment picked above (PRs always run local;
+    # scheduled runs use the monitored environment). The environment supplies
+    # its own HOVER_BASE_URL variable and any environment-scoped secrets.
+    environment: ${{ github.event.inputs.environment || (github.event_name == 'schedule' && 'local' || '') || 'local' }}
     env:
-      HOVER_ENV: ${{ github.event.inputs.environment || (github.event_name == 'schedule' && 'production' || '') || 'local' }}
+      HOVER_ENV: ${{ github.event.inputs.environment || (github.event_name == 'schedule' && 'local' || '') || 'local' }}
       BASE_URL: ${{ vars.HOVER_BASE_URL || 'http://localhost:5173' }}
     steps:
       - uses: actions/checkout@v4
@@ -49,6 +55,8 @@ jobs:
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: hover-results.json
           HOVER_BASE_URL: ${{ env.BASE_URL }}
+          # Test accounts (managed in Hover Cloud -> project -> Test
+          # accounts). Each environment can override these with its own values.
           HOVER_USER_USER: ${{ secrets.HOVER_USER_USER }}
           HOVER_USER_PASS: ${{ secrets.HOVER_USER_PASS }}
       - name: Report the run to Hover Cloud
@@ -64,6 +72,26 @@ jobs:
             -H "Content-Type: application/json" \
             --data-binary @hover-results.json -o hover-ingest-response.json \
             || echo "upload failed (non-blocking)"
+      # Aggregate the run's verdict onto the commit as a "hover/e2e" status,
+      # deep-linked to the run in Hover Cloud. Shows in the PR's checks box.
+      # Posted from YOUR CI with the workflow's own token — Cloud has no write
+      # access to the repo.
+      - name: Report the status to the commit (Hover)
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ ! -f hover-ingest-response.json ]; then exit 0; fi
+          RUN_STATUS=$(jq -r '.runStatus // empty' hover-ingest-response.json)
+          RUN_URL=$(jq -r '.runUrl // empty' hover-ingest-response.json)
+          DESC=$(jq -r '.statusDescription // "See Hover Cloud"' hover-ingest-response.json)
+          if [ -z "$RUN_STATUS" ]; then exit 0; fi
+          # flaky counts as success for the merge gate — it passed on retry.
+          STATE=success
+          if [ "$RUN_STATUS" = "failed" ]; then STATE=failure; fi
+          gh api "repos/${{ github.repository }}/statuses/${{ github.sha }}" \
+            -f state="$STATE" -f context="hover/e2e" \
+            -f description="$DESC" -f target_url="$RUN_URL" || true
       # On a PR, Hover Cloud returns a ready-made comment (failed specs, their
       # heal hints, per-spec flakiness context, an AI read of the failure).
       # Posted from YOUR CI with the workflow's own token — Cloud has no write
