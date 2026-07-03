@@ -5,6 +5,14 @@ name: Hover E2E
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Where to run the specs'
+        type: choice
+        default: local
+        options:
+          - local
+          - production
 # Cancel a superseded run when new commits land on the same ref.
 concurrency:
   group: hover-e2e-${{ github.ref }}
@@ -15,13 +23,10 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+    environment: ${{ github.event.inputs.environment || (github.event_name == 'schedule' && 'local' || '') || 'local' }}
     env:
-      BASE_URL: http://localhost:5173
-      # The app needs its real backend in CI — without these, Supabase calls
-      # hit a placeholder URL and the UI never gets past its loading state.
-      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-      VITE_AI_WORKER_URL: ${{ secrets.VITE_AI_WORKER_URL }}
+      HOVER_ENV: ${{ github.event.inputs.environment || (github.event_name == 'schedule' && 'local' || '') || 'local' }}
+      BASE_URL: ${{ vars.HOVER_BASE_URL || 'http://localhost:5173' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,7 +35,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      # Only the local environment boots the app inside CI — remote
+      # environments point the same specs at their own deployed URL.
       - name: Start the app
+        if: ${{ env.HOVER_ENV == 'local' }}
         run: npm run dev &
       - name: Wait for the app
         run: npx --yes wait-on "$BASE_URL" --timeout 120000
@@ -38,6 +46,7 @@ jobs:
         run: npx playwright test __vibe_tests__ --reporter=html,json
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: hover-results.json
+          HOVER_BASE_URL: ${{ env.BASE_URL }}
       - name: Report the run to Hover Cloud
         if: ${{ !cancelled() }}
         env:
@@ -46,7 +55,7 @@ jobs:
         run: |
           if [ ! -f hover-results.json ]; then echo "no results file"; exit 0; fi
           curl -sS -X POST \
-            "$HOVER_INGEST_URL?source=${{ github.event_name }}&branch=${{ github.head_ref || github.ref_name }}&sha=${{ github.sha }}&ci_url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            "$HOVER_INGEST_URL?source=${{ github.event_name }}&branch=${{ github.head_ref || github.ref_name }}&sha=${{ github.sha }}&ci_url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}&env=${{ env.HOVER_ENV }}" \
             -H "Authorization: Bearer $HOVER_INGEST_TOKEN" \
             -H "Content-Type: application/json" \
             --data-binary @hover-results.json -o hover-ingest-response.json \
