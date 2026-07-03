@@ -12,6 +12,9 @@ concurrency:
 jobs:
   e2e:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     env:
       BASE_URL: http://localhost:5173
       # The app needs its real backend in CI — without these, Supabase calls
@@ -46,7 +49,22 @@ jobs:
             "$HOVER_INGEST_URL?source=${{ github.event_name }}&branch=${{ github.head_ref || github.ref_name }}&sha=${{ github.sha }}&ci_url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
             -H "Authorization: Bearer $HOVER_INGEST_TOKEN" \
             -H "Content-Type: application/json" \
-            --data-binary @hover-results.json || echo "upload failed (non-blocking)"
+            --data-binary @hover-results.json -o hover-ingest-response.json \
+            || echo "upload failed (non-blocking)"
+      # On a PR, Hover Cloud returns a ready-made comment (failed specs, their
+      # heal hints, per-spec flakiness context, an AI read of the failure).
+      # Posted from YOUR CI with the workflow's own token — Cloud has no write
+      # access to the repo.
+      - name: Comment the failures on the PR (Hover)
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ ! -f hover-ingest-response.json ]; then exit 0; fi
+          jq -r '.prComment // empty' hover-ingest-response.json > hover-pr-comment.md
+          if [ -s hover-pr-comment.md ]; then
+            gh pr comment "${{ github.event.pull_request.number }}" --body-file hover-pr-comment.md || true
+          fi
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
