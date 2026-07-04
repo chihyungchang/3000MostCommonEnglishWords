@@ -33,3 +33,6 @@ scripts
 !.hover/hover-map.md
 !.hover/log.md
 !.hover/memory/
+
+test-results/
+playwright-report/

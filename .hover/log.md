@@ -18,3 +18,4 @@ Append-only run history for this app's test wiki. One event per line: `- <ISO> �
 - 2026-07-03T11:43:52.057Z · crystallize · temp-flush-buffer.spec.ts — Temp Flush Buffer
 - 2026-07-03T11:45:08.088Z · crystallize · cancel-reset-data-confirmation.spec.ts — Cancel reset data confirmation
 - 2026-07-04T03:41:37.752Z · crystallize · reveal-word-answer-and-respond.spec.ts — Reveal word answer and respond
+- 2026-07-04T12:27:09.343Z · crystallize · change-daily-goal.spec.ts — Change daily goal
