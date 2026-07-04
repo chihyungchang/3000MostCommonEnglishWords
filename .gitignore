@@ -27,5 +27,9 @@ dist-ssr
 scripts
 .env.local
 
-.hover
+# Hover keeps its knowledge base in git (map, rules, run log) and its
+# working files out of it (sidecars, runs, cache, .env).
+.hover/*
 !.hover/hover-map.md
+!.hover/log.md
+!.hover/memory/
