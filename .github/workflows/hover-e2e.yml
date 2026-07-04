@@ -113,6 +113,16 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
+      # Failure screenshots/traces. Hover Cloud pulls the screenshot for a
+      # failed spec from this artifact to show it inline on the run page.
+      - name: Upload test results (screenshots)
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: hover-test-results
+          path: test-results/
+          retention-days: 14
+          if-no-files-found: ignore
 #
 # Testing a deployed URL instead of building in CI? Delete the "Start the app"
 # + "Wait for the app" steps and point BASE_URL at your deployment.

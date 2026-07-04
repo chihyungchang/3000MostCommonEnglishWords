@@ -9,5 +9,7 @@ export default defineConfig({
   testDir: './__vibe_tests__',
   use: {
     baseURL: process.env.HOVER_BASE_URL ?? "http://localhost:5173",
+    // Hover Cloud shows this screenshot inline on the failed run's page.
+    screenshot: 'only-on-failure',
   },
 });
