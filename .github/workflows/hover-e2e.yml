@@ -55,10 +55,6 @@ jobs:
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: hover-results.json
           HOVER_BASE_URL: ${{ env.BASE_URL }}
-          # Test accounts (managed in Hover Cloud -> project -> Test
-          # accounts). Each environment can override these with its own values.
-          HOVER_USER_USER: ${{ secrets.HOVER_USER_USER }}
-          HOVER_USER_PASS: ${{ secrets.HOVER_USER_PASS }}
       - name: Report the run to Hover Cloud
         if: ${{ !cancelled() }}
         env:
